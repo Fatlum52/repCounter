@@ -2,17 +2,16 @@ import SwiftUI
 import SwiftData
 
 struct ExerciseDetailView: View {
-    
+
     @Bindable var exercise: Exercise
-    @FocusState private var isNumpadFocused: Bool
-    
+    @FocusState private var focusedSetID: Exercise.ExerciseSet.ID?
+
     var body: some View {
         VStack {
-            // Titel of Sets
             Text("Sets")
                 .underline()
                 .font(.title2)
-            // Add Set-Button
+
             HStack {
                 Button {
                     addSet()
@@ -21,41 +20,69 @@ struct ExerciseDetailView: View {
                 }
                 Text("Add Set")
             }
-            
+
             List {
                 if exercise.quickReps > 0 {
                     HStack {
                         Text("Manual Count")
                         Spacer()
                         Text("\(exercise.quickReps)")
+                            .font(.body)
                     }
                 }
-                ForEach(exercise.sets.indices, id: \.self) { index in
+
+                let rows = Array(exercise.sets.enumerated())
+
+                ForEach(rows, id: \.element.id) { index, set in
+                    let displayNumber = exercise.sets.count - index // Set 1 unten
+
+#if os(iOS)
                     HStack {
-                        Text("Set \(index + 1)")
+                        Text("Set \(displayNumber)")
+                        Spacer()
                         TextField(
                             "0",
-                            value: Binding(
-                                get: { exercise.sets[index].reps },
-                                set: { exercise.sets[index].reps = $0 }
-                            ),
+                            value: repsBinding(for: set.id),
                             format: .number
                         )
-#if os(iOS)
                         .keyboardType(.numberPad)
-                        .focused($isNumpadFocused)
-#endif
+                        .focused($focusedSetID, equals: set.id)
                         .multilineTextAlignment(.trailing)
-                        
+                        .frame(width: 60)
                         Text("Reps")
                     }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button(role: .destructive) {
-                            deleteSet(exercise.sets[index])
+                            deleteSet(id: set.id)
                         } label: {
                             Label("Delete", systemImage: "trash")
                         }
                     }
+#elseif os(macOS)
+                    // macOS: Formatierung wie Manual Count
+                    HStack {
+                        Text("Set \(displayNumber)")
+                            .font(.title3)
+                        Spacer()
+                        TextField(
+                            "0",
+                            value: repsBinding(for: set.id),
+                            format: .number
+                        )
+                        .font(.title3)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 60)
+                        Text("Reps")
+                            .font(.title3)
+                    }
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            deleteSet(id: set.id)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+#endif
                 }
             }
             .listStyle(.plain)
@@ -66,39 +93,47 @@ struct ExerciseDetailView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Fertig") {
-                    isNumpadFocused = false
-                }
-                .padding(.trailing, 8)
+                Button("Fertig") { focusedSetID = nil }
+                    .padding(.trailing, 8)
             }
         }
 #endif
     }
-    
+
     ////////////////// HELPER FUNCTION //////////////////
-    
+
+    private func repsBinding(for id: Exercise.ExerciseSet.ID) -> Binding<Int> {
+        Binding(
+            get: {
+                exercise.sets.first(where: { $0.id == id })?.reps ?? 0
+            },
+            set: { newValue in
+                guard let idx = exercise.sets.firstIndex(where: { $0.id == id }) else { return }
+                var copy = exercise.sets
+                copy[idx].reps = newValue
+                exercise.sets = copy
+            }
+        )
+    }
+
     private func addSet() {
         let newIndex = exercise.sets.count + 1
-        exercise.sets.append(Exercise.ExerciseSet("Set \(newIndex)"))
-    }
-    
-    private func deleteSet(_ set: Exercise.ExerciseSet) {
-        exercise.sets.removeAll { $0.id == set.id }
-    }
-}
+        let newSet = Exercise.ExerciseSet("Set \(newIndex)")
 
-#Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Exercise.self, configurations: config)
-    
-    // Modelle erstellen und befüllen (außerhalb des View-Builders)
-    let exercise = Exercise("Pullup")
-    exercise.quickReps = 5
-    exercise.sets.append(Exercise.ExerciseSet("Set 1"))
-    
-    // Optional: In den In-Memory-Kontext einfügen
-    container.mainContext.insert(exercise)
-    
-    return ExerciseDetailView(exercise: exercise)
-        .modelContainer(container)
+        var copy = exercise.sets
+        copy.insert(newSet, at: 0)
+        exercise.sets = copy
+
+#if os(iOS)
+        DispatchQueue.main.async {
+            focusedSetID = newSet.id
+        }
+#endif
+    }
+
+    private func deleteSet(id: Exercise.ExerciseSet.ID) {
+        var copy = exercise.sets
+        copy.removeAll { $0.id == id }
+        exercise.sets = copy
+    }
 }
