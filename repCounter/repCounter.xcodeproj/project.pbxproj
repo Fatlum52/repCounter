@@ -186,7 +186,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 1B1433C02F0D2BB2003C8D57 /* Build configuration list for PBXProject "xCodeProject" */;
+			buildConfigurationList = 1B1433C02F0D2BB2003C8D57 /* Build configuration list for PBXProject "repCounter" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -578,7 +578,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1B1433C02F0D2BB2003C8D57 /* Build configuration list for PBXProject "xCodeProject" */ = {
+		1B1433C02F0D2BB2003C8D57 /* Build configuration list for PBXProject "repCounter" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1B1433E62F0D2BB3003C8D57 /* Debug */,
