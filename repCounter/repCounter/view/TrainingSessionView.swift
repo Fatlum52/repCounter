@@ -119,6 +119,8 @@ struct TrainingSessionView: View {
             }
         }
     }
+    
+    ////////////////// HELPER FUNCTION //////////////////
 
     private func addSession() {
         let name = newSessionName.isEmpty ? "Training Session" : newSessionName
