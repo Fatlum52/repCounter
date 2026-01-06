@@ -1,10 +1,3 @@
-//
-//  Item.swift
-//  repCounter
-//
-//  Created by Fatlum Cikaqi on 06.01.2026.
-//
-
 import Foundation
 import SwiftData
 
@@ -12,12 +5,8 @@ import SwiftData
 final class Exercise: Identifiable {
     var id: UUID = UUID()
     var name: String
-
-    // Reps, die über +/- gezählt werden
-    var quickReps: Int = 0
-
-    // „richtige“ Sets (als eingebettete Werttypen gespeichert)
-    var sets: [ExerciseSet] = []
+    var quickReps: Int = 0 // Reps, die über +/- gezählt werden
+    var sets: [ExerciseSet] = [] // „richtige“ Sets (als eingebettete Werttypen gespeichert)
     
     init(_ name: String) {
         self.name = name
