@@ -12,4 +12,10 @@ final class TrainingSession: Identifiable {
         self.exercises = exercises
         self.date = Date()
     }
+    
+    func getFormattedDate() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "E, d MMM y"
+        return dateFormatter.string(from: date)
+    }
 }
