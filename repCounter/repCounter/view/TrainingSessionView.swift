@@ -16,6 +16,7 @@ struct TrainingSessionView: View {
     @State private var isEditorPresented = false
     @State private var editingSession: TrainingSession?
     @State private var editingName = ""
+    @State private var selectedSessionID: UUID?
 
     var body: some View {
         NavigationSplitView {
@@ -40,17 +41,16 @@ struct TrainingSessionView: View {
                 }
 
                 if !trainingList.isEmpty {
-                    List {
+                    List(selection: $selectedSessionID) {
                         ForEach(trainingList) { training in
-                            NavigationLink {
-                                ExerciseView(trainingSession: training)
-                            } label: {
+                            NavigationLink(value: training.id) {
                                 HStack {
                                     Text(training.name).font(.title2)
                                     Spacer()
                                     Text(training.formattedDate)
                                 }
                             }
+                            .tag(training.id)
 #if os(iOS)
                             .swipeActions(edge: .leading, allowsFullSwipe: false) {
                                 Button {
@@ -111,8 +111,15 @@ struct TrainingSessionView: View {
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
 #endif
         } detail: {
-            if let firstSession = trainingList.first {
-                ExerciseView(trainingSession: firstSession)
+            if let selectedID = selectedSessionID,
+               let selectedSession = trainingList.first(where: { $0.id == selectedID }) {
+                NavigationStack {
+                    ExerciseView(trainingSession: selectedSession)
+                }
+            } else if let firstSession = trainingList.first {
+                NavigationStack {
+                    ExerciseView(trainingSession: firstSession)
+                }
             } else {
                 Text("Select a training session")
                     .foregroundStyle(.secondary)
@@ -132,6 +139,10 @@ struct TrainingSessionView: View {
     }
 
     private func deleteSession(_ session: TrainingSession) {
+        // Wenn die gelöschte Session gerade ausgewählt ist, Auswahl zurücksetzen
+        if selectedSessionID == session.id {
+            selectedSessionID = nil
+        }
         modelContext.delete(session)
     }
 
