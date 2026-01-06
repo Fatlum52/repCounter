@@ -12,7 +12,8 @@ import SwiftData
 struct repCounterApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            TrainingSession.self,
+            Exercise.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -25,7 +26,7 @@ struct repCounterApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            TrainingSessionView()
         }
         .modelContainer(sharedModelContainer)
     }
