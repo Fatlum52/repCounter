@@ -1,14 +1,23 @@
 import SwiftUI
 import SwiftData
+#if os(iOS)
 import PhotosUI
+#elseif os(macOS)
+import AppKit
+import UniformTypeIdentifiers
+#endif
 
 struct ExerciseDetailView: View {
 
     @Bindable var exercise: Exercise
     @FocusState private var focusedSetID: Exercise.ExerciseSet.ID?
+#if os(iOS)
     @State private var showPhotoLibrary: Bool = false
     @State private var photosPickerItems: [PhotosPickerItem] = []
-    @State private var selectedImages: [UIImage] = []
+#elseif os(macOS)
+    @State private var showFilePicker: Bool = false
+#endif
+    @State private var showMediaGallery: Bool = false
 
     var body: some View {
         VStack {
@@ -113,37 +122,20 @@ struct ExerciseDetailView: View {
             
             // Media Button
             Menu {
+#if os(iOS)
                 Button("Select Media", systemImage: "photo.badge.plus") {
-                    // action
                     showPhotoLibrary = true
                 }
-                .onChange(of: photosPickerItems) { _, newItems in
-                    guard !newItems.isEmpty else { return }
-                    
-                    Task {
-#if os(iOS)
-                        var loadedImages: [UIImage] = []
-#endif
-                        for item in newItems {
-                            if let data = try? await item.loadTransferable(type: Data.self) {
-#if os(iOS)
-                                if let image = UIImage(data: data) {
-                                    loadedImages.append(image)
-                                }
-#endif
-                            }
-                        }
-                        await MainActor.run {
-                            selectedImages.append(contentsOf: loadedImages)
-                            photosPickerItems = [] // Reset for next selection
-                        }
-                    }
-                }
                 Button("Take Photo/Video", systemImage: "camera") {
-                    // action
+                    // TODO: Camera implementation
                 }
+#elseif os(macOS)
+                Button("Select Media", systemImage: "photo.badge.plus") {
+                    showFilePicker = true
+                }
+#endif
                 Button("Show Media", systemImage: "photo.stack") {
-                    // action
+                    showMediaGallery = true
                 }
             } label: {
                 Label("Media", systemImage: "photo.on.rectangle")
@@ -154,11 +146,47 @@ struct ExerciseDetailView: View {
             
         }
         .navigationTitle(exercise.name)
+#if os(iOS)
         .photosPicker(
             isPresented: $showPhotoLibrary,
             selection: $photosPickerItems,
             matching: .images
         )
+        .onChange(of: photosPickerItems) { _, newItems in
+            guard !newItems.isEmpty else { return }
+            
+            Task {
+                var loadedImages: [UIImage] = []
+                for item in newItems {
+                    if let data = try? await item.loadTransferable(type: Data.self) {
+                        if let image = UIImage(data: data) {
+                            loadedImages.append(image)
+                        }
+                    }
+                }
+                await MainActor.run {
+                    // save images
+                    for image in loadedImages {
+                        let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
+                        if FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
+                            let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .image)
+                            exercise.mediaItems.append(mediaItem)
+                        }
+                    }
+                    photosPickerItems = []
+                }
+            }
+        }
+#elseif os(macOS)
+        .onChange(of: showFilePicker) { _, isShowing in
+            if isShowing {
+                selectImageFromFile()
+            }
+        }
+#endif
+        .sheet(isPresented: $showMediaGallery) {
+            MediaGalleryView(exercise: exercise)
+        }
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -207,4 +235,29 @@ struct ExerciseDetailView: View {
         copy.removeAll { $0.id == id }
         exercise.sets = copy
     }
+    
+#if os(macOS)
+    private func selectImageFromFile() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowedContentTypes = [.image, .jpeg, .png, .gif, .heic]
+        
+        panel.begin { response in
+            if response == .OK {
+                for url in panel.urls {
+                    if let image = NSImage(contentsOf: url) {
+                        let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
+                        if FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
+                            let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .image)
+                            exercise.mediaItems.append(mediaItem)
+                        }
+                    }
+                }
+            }
+            showFilePicker = false
+        }
+    }
+#endif
 }
