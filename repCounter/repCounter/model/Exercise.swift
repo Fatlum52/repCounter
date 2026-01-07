@@ -7,6 +7,7 @@ final class Exercise: Identifiable {
     var name: String
     var quickReps: Int = 0 // Reps, die über +/- gezählt werden
     var sets: [ExerciseSet] = [] // „richtige“ Sets (als eingebettete Werttypen gespeichert)
+    var notes: String = ""
     
     init(_ name: String) {
         self.name = name
