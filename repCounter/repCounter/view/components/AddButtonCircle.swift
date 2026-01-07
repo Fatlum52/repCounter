@@ -8,15 +8,15 @@ struct AddButtonCircle: View {
     var body: some View {
         
         HStack {
-            Button {
+            Button(title, systemImage: "plus.circle") {
                 handleAdd()
-            } label: {
-                Image(systemName: "plus.circle")
             }
-            Text(title)
         }
-        .font(.title2)
-        .padding(.top, 10)
+        .font(.title3)
+        .controlSize(.large)
+        .buttonStyle(.borderedProminent)
+        .tint(.green)
+        .foregroundStyle(.white)
     }
     
     private func handleAdd() {
