@@ -1,10 +1,14 @@
 import SwiftUI
 import SwiftData
+import PhotosUI
 
 struct ExerciseDetailView: View {
 
     @Bindable var exercise: Exercise
     @FocusState private var focusedSetID: Exercise.ExerciseSet.ID?
+    @State private var showPhotoLibrary: Bool = false
+    @State private var photosPickerItems: [PhotosPickerItem] = []
+    @State private var selectedImages: [UIImage] = []
 
     var body: some View {
         VStack {
@@ -111,6 +115,29 @@ struct ExerciseDetailView: View {
             Menu {
                 Button("Select Media", systemImage: "photo.badge.plus") {
                     // action
+                    showPhotoLibrary = true
+                }
+                .onChange(of: photosPickerItems) { _, newItems in
+                    guard !newItems.isEmpty else { return }
+                    
+                    Task {
+#if os(iOS)
+                        var loadedImages: [UIImage] = []
+#endif
+                        for item in newItems {
+                            if let data = try? await item.loadTransferable(type: Data.self) {
+#if os(iOS)
+                                if let image = UIImage(data: data) {
+                                    loadedImages.append(image)
+                                }
+#endif
+                            }
+                        }
+                        await MainActor.run {
+                            selectedImages.append(contentsOf: loadedImages)
+                            photosPickerItems = [] // Reset for next selection
+                        }
+                    }
                 }
                 Button("Take Photo/Video", systemImage: "camera") {
                     // action
@@ -124,8 +151,14 @@ struct ExerciseDetailView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+            
         }
         .navigationTitle(exercise.name)
+        .photosPicker(
+            isPresented: $showPhotoLibrary,
+            selection: $photosPickerItems,
+            matching: .images
+        )
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
