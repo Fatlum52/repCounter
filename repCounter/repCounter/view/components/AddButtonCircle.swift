@@ -2,8 +2,8 @@ import SwiftUI
 
 struct AddButtonCircle: View {
     
-    var onAdd:   ()   -> Void
     let title: String
+    var onAdd:   ()   -> Void
     
     var body: some View {
         
