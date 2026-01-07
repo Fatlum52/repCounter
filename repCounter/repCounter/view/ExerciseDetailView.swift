@@ -24,6 +24,7 @@ struct ExerciseDetailView: View {
                         Text("\(exercise.quickReps)")
                             .font(.body)
                     }
+                    Text("Reps")
                 }
 
                 let rows = Array(exercise.sets.enumerated())
