@@ -8,6 +8,7 @@ final class Exercise: Identifiable {
     var quickReps: Int = 0 // Reps, die über +/- gezählt werden
     var sets: [ExerciseSet] = [] // „richtige“ Sets (als eingebettete Werttypen gespeichert)
     var notes: String = ""
+    var mediaItems: [MediaItem] = [] // images or videos within exercise
     
     init(_ name: String) {
         self.name = name
@@ -20,6 +21,17 @@ final class Exercise: Identifiable {
         
         init(_ name: String) {
             self.name = name
+        }
+    }
+    
+    struct MediaItem: Identifiable, Codable {
+        var id: UUID = UUID()
+        var fileName: String
+        var fileType: MediaType
+        var createdAt: Date = Date()
+        
+        enum MediaType: String, Codable {
+            case image, video
         }
     }
 
