@@ -1,20 +1,25 @@
-//
-//  SwiftUIView.swift
-//  repCounter
-//
-//  Created by Fatlum Cikaqi on 07.01.2026.
-//
-
 import SwiftUI
 
-struct SwiftUIView: View {
+struct AddButtonCircle: View {
+    
+    var onAdd:   ()   -> Void
+    let title: String
     
     var body: some View {
         
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        HStack {
+            Button {
+                handleAdd()
+            } label: {
+                Image(systemName: "plus.circle")
+            }
+            Text(title)
+        }
+        .font(.title2)
+        .padding(.top, 10)
     }
-}
-
-#Preview {
-    SwiftUIView()
+    
+    private func handleAdd() {
+        onAdd()
+    }
 }
