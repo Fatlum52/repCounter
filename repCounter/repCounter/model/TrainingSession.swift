@@ -17,8 +17,8 @@ final class TrainingSession: Identifiable {
     
     init(_ name: String, _ exercises: [Exercise]) {
         self.name = name
-        self.exercises = exercises
         self.date = Date()
+        self.exercises = exercises
     }
     
     var formattedDate: String {
