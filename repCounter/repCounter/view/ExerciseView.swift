@@ -15,16 +15,9 @@ struct ExerciseView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                HStack {
-                    Button {
-                        isAddingExercise.toggle()
-                    } label: {
-                        Image(systemName: "plus.circle")
-                    }
-                    Text("Add Exercise")
+                AddButtonCircle(title: "Add Exercise") {
+                    isAddingExercise.toggle()
                 }
-                .font(.title2)
-                .padding(.top, 10)
 
                 if isAddingExercise {
                     TextField("Add Exercise", text: $draftName)

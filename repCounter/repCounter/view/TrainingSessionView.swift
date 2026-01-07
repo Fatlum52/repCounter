@@ -21,16 +21,9 @@ struct TrainingSessionView: View {
     var body: some View {
         NavigationSplitView {
             VStack {
-                HStack {
-                    Button {
-                        isAddingSession.toggle()
-                    } label: {
-                        Image(systemName: "plus.circle")
-                    }
-                    Text("Add Training Session")
+                AddButtonCircle(title: "Add Training Session") {
+                    isAddingSession.toggle()
                 }
-                .font(.title2)
-                .padding(.top, 10)
 
                 if isAddingSession {
                     TextField("Add Training", text: $newSessionName)

@@ -12,13 +12,8 @@ struct ExerciseDetailView: View {
                 .underline()
                 .font(.title2)
 
-            HStack {
-                Button {
-                    addSet()
-                } label: {
-                    Image(systemName: "plus.circle")
-                }
-                Text("Add Set")
+            AddButtonCircle(title: "Add Set") {
+                addSet()
             }
 
             List {
