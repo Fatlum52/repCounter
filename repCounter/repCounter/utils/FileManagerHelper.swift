@@ -58,4 +58,28 @@ class FileManagerHelper {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
         try? FileManager.default.removeItem(at: url)
     }
+    
+    // MARK: - Video Support
+    
+    static func saveVideoToDocuments(videoURL: URL, fileName: String) -> URL? {
+        let destinationURL = getDocumentsDirectory().appendingPathComponent(fileName)
+        do {
+            // Wenn Datei bereits existiert, löschen
+            if FileManager.default.fileExists(atPath: destinationURL.path) {
+                try FileManager.default.removeItem(at: destinationURL)
+            }
+            // Video kopieren
+            try FileManager.default.copyItem(at: videoURL, to: destinationURL)
+            return destinationURL
+        } catch {
+            print("Error saving video: \(error)")
+            return nil
+        }
+    }
+    
+    static func getVideoURL(fileName: String) -> URL? {
+        let url = getDocumentsDirectory().appendingPathComponent(fileName)
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        return url
+    }
 }
