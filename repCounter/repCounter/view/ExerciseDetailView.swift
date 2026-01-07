@@ -7,6 +7,25 @@ import AppKit
 import UniformTypeIdentifiers
 #endif
 
+#if os(iOS)
+struct Movie: Transferable {
+    let url: URL
+    
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(contentType: .movie) { movie in
+            SentTransferredFile(movie.url)
+        } importing: { received in
+            let copy = URL.documentsDirectory.appending(path: "\(UUID().uuidString).mov")
+            if FileManager.default.fileExists(atPath: copy.path()) {
+                try FileManager.default.removeItem(at: copy)
+            }
+            try FileManager.default.copyItem(at: received.file, to: copy)
+            return Self.init(url: copy)
+        }
+    }
+}
+#endif
+
 struct ExerciseDetailView: View {
 
     @Bindable var exercise: Exercise
@@ -15,6 +34,7 @@ struct ExerciseDetailView: View {
     @State private var showPhotoLibrary: Bool = false
     @State private var photosPickerItems: [PhotosPickerItem] = []
     @State private var showCamera: Bool = false
+    @State private var cameraMode: CameraMode = .photo
 #elseif os(macOS)
     @State private var showFilePicker: Bool = false
 #endif
@@ -127,7 +147,12 @@ struct ExerciseDetailView: View {
                 Button("Select Media", systemImage: "photo.badge.plus") {
                     showPhotoLibrary = true
                 }
-                Button("Take Photo/Video", systemImage: "camera") {
+                Button("Take Photo", systemImage: "camera") {
+                    cameraMode = .photo
+                    showCamera = true
+                }
+                Button("Record Video", systemImage: "video") {
+                    cameraMode = .video
                     showCamera = true
                 }
 #elseif os(macOS)
@@ -151,29 +176,36 @@ struct ExerciseDetailView: View {
         .photosPicker(
             isPresented: $showPhotoLibrary,
             selection: $photosPickerItems,
-            matching: .images
+            matching: .any(of: [.images, .videos])
         )
         .onChange(of: photosPickerItems) { _, newItems in
             guard !newItems.isEmpty else { return }
             
             Task {
-                var loadedImages: [UIImage] = []
                 for item in newItems {
-                    if let data = try? await item.loadTransferable(type: Data.self) {
+                    // Check if it's a video
+                    if let videoData = try? await item.loadTransferable(type: Movie.self) {
+                        await MainActor.run {
+                            let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).mov"
+                            if FileManagerHelper.saveVideoToDocuments(videoURL: videoData.url, fileName: fileName) != nil {
+                                let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .video)
+                                exercise.mediaItems.append(mediaItem)
+                            }
+                        }
+                    } else if let data = try? await item.loadTransferable(type: Data.self) {
+                        // It's an image
                         if let image = UIImage(data: data) {
-                            loadedImages.append(image)
+                            await MainActor.run {
+                                let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
+                                if FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
+                                    let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .image)
+                                    exercise.mediaItems.append(mediaItem)
+                                }
+                            }
                         }
                     }
                 }
                 await MainActor.run {
-                    // save images
-                    for image in loadedImages {
-                        let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
-                        if FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
-                            let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .image)
-                            exercise.mediaItems.append(mediaItem)
-                        }
-                    }
                     photosPickerItems = []
                 }
             }
@@ -189,10 +221,15 @@ struct ExerciseDetailView: View {
             MediaGalleryView(exercise: exercise)
         }
 #if os(iOS)
-        .sheet(isPresented: $showCamera) {
+        .fullScreenCover(isPresented: $showCamera) {
             CameraPicker(
+                mode: cameraMode,
                 onImage: { image in
                     saveCameraImage(image)
+                    showCamera = false
+                },
+                onVideo: { videoURL in
+                    saveCameraVideo(videoURL)
                     showCamera = false
                 },
                 onCancel: {
@@ -256,6 +293,14 @@ struct ExerciseDetailView: View {
             exercise.mediaItems.append(mediaItem)
         }
     }
+    
+    private func saveCameraVideo(_ videoURL: URL) {
+        let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).mov"
+        if FileManagerHelper.saveVideoToDocuments(videoURL: videoURL, fileName: fileName) != nil {
+            let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .video)
+            exercise.mediaItems.append(mediaItem)
+        }
+    }
 #endif
     
 #if os(macOS)
@@ -264,12 +309,20 @@ struct ExerciseDetailView: View {
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
-        panel.allowedContentTypes = [.image, .jpeg, .png, .gif, .heic]
+        panel.allowedContentTypes = [.image, .jpeg, .png, .gif, .heic, .movie, .mpeg4Movie, .quickTimeMovie]
         
         panel.begin { response in
             if response == .OK {
                 for url in panel.urls {
-                    if let image = NSImage(contentsOf: url) {
+                    // Check if it's a video
+                    if url.pathExtension.lowercased() == "mov" || url.pathExtension.lowercased() == "mp4" || url.pathExtension.lowercased() == "m4v" {
+                        let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).\(url.pathExtension)"
+                        if FileManagerHelper.saveVideoToDocuments(videoURL: url, fileName: fileName) != nil {
+                            let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .video)
+                            exercise.mediaItems.append(mediaItem)
+                        }
+                    } else if let image = NSImage(contentsOf: url) {
+                        // It's an image
                         let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
                         if FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
                             let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .image)
