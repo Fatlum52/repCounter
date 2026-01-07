@@ -14,6 +14,7 @@ struct ExerciseDetailView: View {
 #if os(iOS)
     @State private var showPhotoLibrary: Bool = false
     @State private var photosPickerItems: [PhotosPickerItem] = []
+    @State private var showCamera: Bool = false
 #elseif os(macOS)
     @State private var showFilePicker: Bool = false
 #endif
@@ -127,7 +128,7 @@ struct ExerciseDetailView: View {
                     showPhotoLibrary = true
                 }
                 Button("Take Photo/Video", systemImage: "camera") {
-                    // TODO: Camera implementation
+                    showCamera = true
                 }
 #elseif os(macOS)
                 Button("Select Media", systemImage: "photo.badge.plus") {
@@ -188,6 +189,17 @@ struct ExerciseDetailView: View {
             MediaGalleryView(exercise: exercise)
         }
 #if os(iOS)
+        .sheet(isPresented: $showCamera) {
+            CameraPicker(
+                onImage: { image in
+                    saveCameraImage(image)
+                    showCamera = false
+                },
+                onCancel: {
+                    showCamera = false
+                }
+            )
+        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
@@ -235,6 +247,16 @@ struct ExerciseDetailView: View {
         copy.removeAll { $0.id == id }
         exercise.sets = copy
     }
+    
+#if os(iOS)
+    private func saveCameraImage(_ image: UIImage) {
+        let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
+        if FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
+            let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .image)
+            exercise.mediaItems.append(mediaItem)
+        }
+    }
+#endif
     
 #if os(macOS)
     private func selectImageFromFile() {
