@@ -106,6 +106,24 @@ struct ExerciseDetailView: View {
                             .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                     )
             }
+            
+            // Media Button
+            Menu {
+                Button("Select Media", systemImage: "photo.badge.plus") {
+                    // action
+                }
+                Button("Take Photo/Video", systemImage: "camera") {
+                    // action
+                }
+                Button("Show Media", systemImage: "photo.stack") {
+                    // action
+                }
+            } label: {
+                Label("Media", systemImage: "photo.on.rectangle")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
         }
         .navigationTitle(exercise.name)
 #if os(iOS)
