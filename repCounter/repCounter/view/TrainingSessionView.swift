@@ -22,7 +22,9 @@ struct TrainingSessionView: View {
         NavigationSplitView {
             VStack {
                 HStack {
-                    Button { isAddingSession.toggle() } label: {
+                    Button {
+                        isAddingSession.toggle()
+                    } label: {
                         Image(systemName: "plus.circle")
                     }
                     Text("Add Training Session")

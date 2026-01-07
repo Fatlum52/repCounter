@@ -16,7 +16,9 @@ struct ExerciseView: View {
         NavigationStack {
             VStack {
                 HStack {
-                    Button { isAddingExercise.toggle() } label: {
+                    Button {
+                        isAddingExercise.toggle()
+                    } label: {
                         Image(systemName: "plus.circle")
                     }
                     Text("Add Exercise")
