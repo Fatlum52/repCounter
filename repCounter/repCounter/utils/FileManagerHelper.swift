@@ -66,39 +66,39 @@ class FileManagerHelper {
     static func saveVideoToDocuments(videoURL: URL, fileName: String) async -> URL? {
         let destinationURL = getDocumentsDirectory().appendingPathComponent(fileName)
         
-        // Wenn Datei bereits existiert, löschen
+        // If file already exists, delete it
         if FileManager.default.fileExists(atPath: destinationURL.path) {
             try? FileManager.default.removeItem(at: destinationURL)
         }
         
-        // Video komprimieren und speichern
+        // Compress and save video
         return await compressAndSaveVideo(sourceURL: videoURL, destinationURL: destinationURL)
     }
     
     private static func compressAndSaveVideo(sourceURL: URL, destinationURL: URL) async -> URL? {
         let asset = AVURLAsset(url: sourceURL)
         
-        // Lade Video-Track und Asset-Dauer
+        // Load video track and asset duration
         guard let videoTracks = try? await asset.loadTracks(withMediaType: .video),
               let videoTrack = videoTracks.first,
               let duration = try? await asset.load(.duration) else {
-            // Fallback: Falls Laden fehlschlägt, Video direkt kopieren
+            // Fallback: If loading fails, copy video directly
             return await copyVideoFallback(sourceURL: sourceURL, destinationURL: destinationURL)
         }
         
-        // Video auf max. 720p reduzieren (für Übungsvideos ausreichend)
+        // Reduce video to max 720p (sufficient for exercise videos)
         let optimalSize = await calculateOptimalSize(for: videoTrack, maxDimension: 720)
         
-        // Neue API: VideoComposition.Configuration verwenden
+        // New API: Use VideoComposition.Configuration
         var videoCompositionConfiguration = AVVideoComposition.Configuration()
         videoCompositionConfiguration.renderSize = optimalSize
         videoCompositionConfiguration.frameDuration = CMTime(value: 1, timescale: 30)
         
-        // Vereinfachte Kompression: Nur Preset verwenden (Medium Quality reduziert bereits Größe erheblich)
-        // Optional: VideoComposition für Größenreduzierung hinzufügen
-        let videoComposition: AVMutableVideoComposition? = nil // Für jetzt deaktiviert, reduziert Komplexität
+        // Simplified compression: Use preset only (Medium Quality already significantly reduces size)
+        // Optional: Add VideoComposition for size reduction
+        let videoComposition: AVMutableVideoComposition? = nil // Disabled for now, reduces complexity
         
-        // ExportSession erstellen und verwenden
+        // Create and use ExportSession
         guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetMediumQuality) else {
             return await copyVideoFallback(sourceURL: sourceURL, destinationURL: destinationURL)
         }
@@ -110,15 +110,15 @@ class FileManagerHelper {
             exportSession.videoComposition = videoComposition
         }
         
-        // Export async ausführen - verwende die alte API (noch funktional)
+        // Execute export async - use old API (still functional)
         return await withCheckedContinuation { (continuation: CheckedContinuation<URL?, Never>) in
             exportSession.exportAsynchronously {
-                // Verwende @preconcurrency um Sendable-Warnung zu vermeiden
+                // Use explicit continuation type to avoid Sendable warning
                 let isCompleted: Bool
                 isCompleted = exportSession.status == .completed
                 
                 if isCompleted {
-                    // Original-Video löschen (falls es temporär war)
+                    // Delete original video (if it was temporary)
                     if sourceURL.path.contains(NSTemporaryDirectory()) {
                         try? FileManager.default.removeItem(at: sourceURL)
                     }
@@ -126,7 +126,7 @@ class FileManagerHelper {
                 } else {
                     let statusRawValue = exportSession.status.rawValue
                     print("Video compression failed: Export status \(statusRawValue)")
-                    // Fallback: Video direkt kopieren
+                    // Fallback: Copy video directly
                     Task {
                         let result = await copyVideoFallback(sourceURL: sourceURL, destinationURL: destinationURL)
                         continuation.resume(returning: result)
