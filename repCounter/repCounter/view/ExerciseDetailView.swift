@@ -185,10 +185,10 @@ struct ExerciseDetailView: View {
                 for item in newItems {
                     // Check if it's a video
                     if let videoData = try? await item.loadTransferable(type: Movie.self) {
-                        await MainActor.run {
-                            let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).mov"
-                            if FileManagerHelper.saveVideoToDocuments(videoURL: videoData.url, fileName: fileName) != nil {
-                                let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .video)
+                        let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).mp4"
+                        if let savedURL = await FileManagerHelper.saveVideoToDocuments(videoURL: videoData.url, fileName: fileName) {
+                            await MainActor.run {
+                                let mediaItem = Exercise.MediaItem(fileName: savedURL.lastPathComponent, fileType: .video)
                                 exercise.mediaItems.append(mediaItem)
                             }
                         }
@@ -295,10 +295,14 @@ struct ExerciseDetailView: View {
     }
     
     private func saveCameraVideo(_ videoURL: URL) {
-        let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).mov"
-        if FileManagerHelper.saveVideoToDocuments(videoURL: videoURL, fileName: fileName) != nil {
-            let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .video)
-            exercise.mediaItems.append(mediaItem)
+        let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).mp4"
+        Task {
+            if let savedURL = await FileManagerHelper.saveVideoToDocuments(videoURL: videoURL, fileName: fileName) {
+                await MainActor.run {
+                    let mediaItem = Exercise.MediaItem(fileName: savedURL.lastPathComponent, fileType: .video)
+                    exercise.mediaItems.append(mediaItem)
+                }
+            }
         }
     }
 #endif
@@ -313,20 +317,26 @@ struct ExerciseDetailView: View {
         
         panel.begin { response in
             if response == .OK {
-                for url in panel.urls {
-                    // Check if it's a video
-                    if url.pathExtension.lowercased() == "mov" || url.pathExtension.lowercased() == "mp4" || url.pathExtension.lowercased() == "m4v" {
-                        let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).\(url.pathExtension)"
-                        if FileManagerHelper.saveVideoToDocuments(videoURL: url, fileName: fileName) != nil {
-                            let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .video)
-                            exercise.mediaItems.append(mediaItem)
-                        }
-                    } else if let image = NSImage(contentsOf: url) {
-                        // It's an image
-                        let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
-                        if FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
-                            let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .image)
-                            exercise.mediaItems.append(mediaItem)
+                Task {
+                    for url in panel.urls {
+                        // Check if it's a video
+                        if url.pathExtension.lowercased() == "mov" || url.pathExtension.lowercased() == "mp4" || url.pathExtension.lowercased() == "m4v" {
+                            let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).mp4"
+                            if let savedURL = await FileManagerHelper.saveVideoToDocuments(videoURL: url, fileName: fileName) {
+                                await MainActor.run {
+                                    let mediaItem = Exercise.MediaItem(fileName: savedURL.lastPathComponent, fileType: .video)
+                                    exercise.mediaItems.append(mediaItem)
+                                }
+                            }
+                        } else if let image = NSImage(contentsOf: url) {
+                            // It's an image
+                            let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
+                            if FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
+                                await MainActor.run {
+                                    let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .image)
+                                    exercise.mediaItems.append(mediaItem)
+                                }
+                            }
                         }
                     }
                 }
