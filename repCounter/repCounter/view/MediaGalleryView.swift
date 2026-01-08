@@ -130,6 +130,10 @@ struct FullscreenMediaView: View {
                 }
             }
         }
+#if os(macOS)
+        .frame(minWidth: 800, minHeight: 600)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+#endif
     }
 }
 
