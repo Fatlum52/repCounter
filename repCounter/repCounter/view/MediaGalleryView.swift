@@ -25,7 +25,7 @@ struct MediaGalleryView: View {
                             selectedMediaItem = item
                         } label: {
                             ZStack {
-                                // Image
+                                // Image thumbnail
                                 if item.fileType == .image,
                                    let image = FileManagerHelper.loadImageFromDocuments(fileName: item.fileName) {
                                     image
