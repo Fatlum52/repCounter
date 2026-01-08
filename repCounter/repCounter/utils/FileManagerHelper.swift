@@ -173,4 +173,18 @@ class FileManagerHelper {
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         return url
     }
+    
+    // MARK: - Media Cleanup
+    
+    static func deleteMediaFiles(for exercise: Exercise) {
+        for mediaItem in exercise.mediaItems {
+            deleteFileFromDocuments(fileName: mediaItem.fileName)
+        }
+    }
+    
+    static func deleteMediaFiles(for session: TrainingSession) {
+        for exercise in session.exercises {
+            deleteMediaFiles(for: exercise)
+        }
+    }
 }
