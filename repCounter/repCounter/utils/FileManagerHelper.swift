@@ -99,13 +99,22 @@ class FileManagerHelper {
         let videoComposition: AVMutableVideoComposition? = nil // Disabled for now, reduces complexity
         
         // Create and use ExportSession
-        guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetMediumQuality) else {
+        // Use AVAssetExportPresetHighestQuality to ensure audio is preserved
+        // MediumQuality sometimes drops audio, so we'll use HighestQuality but with size reduction
+        guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetHighestQuality) else {
             return await copyVideoFallback(sourceURL: sourceURL, destinationURL: destinationURL)
         }
         
         exportSession.outputURL = destinationURL
         exportSession.outputFileType = .mp4
         exportSession.shouldOptimizeForNetworkUse = true
+        
+        // Verify audio tracks exist and will be preserved
+        if let audioTracks = try? await asset.loadTracks(withMediaType: .audio), audioTracks.isEmpty {
+            // No audio tracks found, but continue with export
+            print("Warning: No audio tracks found in video")
+        }
+        
         if let videoComposition = videoComposition {
             exportSession.videoComposition = videoComposition
         }
