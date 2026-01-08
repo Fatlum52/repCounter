@@ -5,7 +5,7 @@ struct TrainingSessionView: View {
 
     @Environment(\.modelContext) private var modelContext
 
-    // Daten kommen jetzt aus SwiftData, nicht mehr aus @State
+    // data comes from SwiftData, not from @State
     @Query(sort: \TrainingSession.date, order: .reverse)
     private var trainingList: [TrainingSession]
 
@@ -134,7 +134,10 @@ struct TrainingSessionView: View {
     }
 
     private func deleteSession(_ session: TrainingSession) {
-        // Wenn die gelöschte Session gerade ausgewählt ist, Auswahl zurücksetzen
+        // Delete all media files for the exercises
+        FileManagerHelper.deleteMediaFiles(for: session)
+        
+        // If the deleted session is currently selected, reset the selection
         if selectedSessionID == session.id {
             selectedSessionID = nil
         }
