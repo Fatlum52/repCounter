@@ -125,6 +125,9 @@ struct ExerciseView: View {
     }
 
     private func deleteExercise(_ exercise: Exercise) {
+        // Delete all media files for the exercise
+        FileManagerHelper.deleteMediaFiles(for: exercise)
+        
         trainingSession.exercises.removeAll { $0.id == exercise.id }
         modelContext.delete(exercise)
     }
