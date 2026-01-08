@@ -8,16 +8,25 @@ import AppKit
 import AVFoundation
 #endif
 
+// helper class for photo, video handling
 class FileManagerHelper {
+
+    // MARK: - Documents Directory
+
+    // documents directory of the app
     static func getDocumentsDirectory() -> URL {
-        FileManager.default.urls(for: .documentDirectory,
-                                in: .userDomainMask)[0]
+        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
-    
+
+    // MARK: - Image Support
+
 #if os(iOS)
+
+    // saves UIImage as jpge in document directory
     static func saveImageToDocuments(image: UIImage, fileName: String) -> URL? {
         guard let data = image.jpegData(compressionQuality: 0.8) else { return nil }
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
+
         do {
             try data.write(to: url)
             return url
@@ -26,20 +35,27 @@ class FileManagerHelper {
             return nil
         }
     }
-    
+
+    // loads saved image as SwiftUI Image
     static func loadImageFromDocuments(fileName: String) -> Image? {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
         guard let uiImage = UIImage(contentsOfFile: url.path) else { return nil }
         return Image(uiImage: uiImage)
     }
+
 #elseif os(macOS)
+
+    // saves NSImage as jpeg in documents directory
     static func saveImageToDocuments(image: NSImage, fileName: String) -> URL? {
         guard let tiffData = image.tiffRepresentation,
               let bitmapImage = NSBitmapImageRep(data: tiffData),
-              let data = bitmapImage.representation(using: .jpeg, properties: [.compressionFactor: 0.8]) else {
-            return nil
-        }
+              let data = bitmapImage.representation(
+                using: .jpeg,
+                properties: [.compressionFactor: 0.8]
+              ) else { return nil }
+
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
+
         do {
             try data.write(to: url)
             return url
@@ -48,126 +64,137 @@ class FileManagerHelper {
             return nil
         }
     }
-    
+
+    // loads saved photo as SwiftUI Image
     static func loadImageFromDocuments(fileName: String) -> Image? {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
         guard let nsImage = NSImage(contentsOfFile: url.path) else { return nil }
         return Image(nsImage: nsImage)
     }
+
 #endif
-    
+
+    // deletes file from documents directory
     static func deleteFileFromDocuments(fileName: String) {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
         try? FileManager.default.removeItem(at: url)
     }
-    
+
     // MARK: - Video Support
-    
+
+    // public entrypoint to safe videos
     static func saveVideoToDocuments(videoURL: URL, fileName: String) async -> URL? {
         let destinationURL = getDocumentsDirectory().appendingPathComponent(fileName)
-        
-        // If file already exists, delete it
+
+        // no duplicates, removes existing file
         if FileManager.default.fileExists(atPath: destinationURL.path) {
             try? FileManager.default.removeItem(at: destinationURL)
         }
-        
-        // Compress and save video
-        return await compressAndSaveVideo(sourceURL: videoURL, destinationURL: destinationURL)
+
+        return await compressAndSaveVideo(
+            sourceURL: videoURL,
+            destinationURL: destinationURL
+        )
     }
-    
-    private static func compressAndSaveVideo(sourceURL: URL, destinationURL: URL) async -> URL? {
+
+    // compromises video depending the source (camera or upload
+    private static func compressAndSaveVideo(
+        sourceURL: URL,
+        destinationURL: URL
+    ) async -> URL? {
+
         let asset = AVURLAsset(url: sourceURL)
-        
-        // Load video track and asset duration
-        guard let videoTracks = try? await asset.loadTracks(withMediaType: .video),
-              let videoTrack = videoTracks.first,
-              let duration = try? await asset.load(.duration) else {
-            // Fallback: If loading fails, copy video directly
-            return await copyVideoFallback(sourceURL: sourceURL, destinationURL: destinationURL)
+
+        // uploaded videos normally are not from temp-directory
+        let isUploadedVideo = !sourceURL.path.contains(NSTemporaryDirectory())
+
+        // preset depending on source
+        // uploads compromise more aggressiv
+        let preset: String = isUploadedVideo
+            ? AVAssetExportPreset640x480
+            : AVAssetExportPresetMediumQuality
+
+        guard let exportSession = AVAssetExportSession(
+            asset: asset,
+            presetName: preset
+        ) else {
+            return await copyVideoFallback(
+                sourceURL: sourceURL,
+                destinationURL: destinationURL
+            )
         }
-        
-        // Reduce video to max 720p (sufficient for exercise videos)
-        let optimalSize = await calculateOptimalSize(for: videoTrack, maxDimension: 720)
-        
-        // New API: Use VideoComposition.Configuration
-        var videoCompositionConfiguration = AVVideoComposition.Configuration()
-        videoCompositionConfiguration.renderSize = optimalSize
-        videoCompositionConfiguration.frameDuration = CMTime(value: 1, timescale: 30)
-        
-        // Simplified compression: Use preset only (Medium Quality already significantly reduces size)
-        // Optional: Add VideoComposition for size reduction
-        let videoComposition: AVMutableVideoComposition? = nil // Disabled for now, reduces complexity
-        
-        // Create and use ExportSession
-        // Use AVAssetExportPresetHighestQuality to ensure audio is preserved
-        // MediumQuality sometimes drops audio, so we'll use HighestQuality but with size reduction
-        guard let exportSession = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetHighestQuality) else {
-            return await copyVideoFallback(sourceURL: sourceURL, destinationURL: destinationURL)
-        }
-        
+
         exportSession.outputURL = destinationURL
         exportSession.outputFileType = .mp4
         exportSession.shouldOptimizeForNetworkUse = true
-        
-        // Verify audio tracks exist and will be preserved
-        if let audioTracks = try? await asset.loadTracks(withMediaType: .audio), audioTracks.isEmpty {
-            // No audio tracks found, but continue with export
-            print("Warning: No audio tracks found in video")
-        }
-        
-        if let videoComposition = videoComposition {
-            exportSession.videoComposition = videoComposition
-        }
-        
-        // Execute export async - use old API (still functional)
-        return await withCheckedContinuation { (continuation: CheckedContinuation<URL?, Never>) in
+
+        // asynchronous export
+        return await withCheckedContinuation { continuation in
             exportSession.exportAsynchronously {
-                // Use explicit continuation type to avoid Sendable warning
-                let isCompleted: Bool
-                isCompleted = exportSession.status == .completed
-                
-                if isCompleted {
-                    // Delete original video (if it was temporary)
+
+                if exportSession.status == .completed {
+
+                    // temporary camera-video after export delete
                     if sourceURL.path.contains(NSTemporaryDirectory()) {
                         try? FileManager.default.removeItem(at: sourceURL)
                     }
+
                     continuation.resume(returning: destinationURL)
+
                 } else {
-                    let statusRawValue = exportSession.status.rawValue
-                    print("Video compression failed: Export status \(statusRawValue)")
-                    // Fallback: Copy video directly
+                    print("Video export failed: \(exportSession.status.rawValue)")
+
                     Task {
-                        let result = await copyVideoFallback(sourceURL: sourceURL, destinationURL: destinationURL)
-                        continuation.resume(returning: result)
+                        let fallback = await copyVideoFallback(
+                            sourceURL: sourceURL,
+                            destinationURL: destinationURL
+                        )
+                        continuation.resume(returning: fallback)
                     }
                 }
             }
         }
     }
-    
-    private static func calculateOptimalSize(for track: AVAssetTrack, maxDimension: CGFloat) async -> CGSize {
+
+    // calculates scaled video-size with ration aspect
+    private static func calculateOptimalSize(
+        for track: AVAssetTrack,
+        maxDimension: CGFloat
+    ) async -> CGSize {
+
         guard let naturalSize = try? await track.load(.naturalSize),
-              let preferredTransform = try? await track.load(.preferredTransform) else {
-            return CGSize(width: 720, height: 720)
+              let transform = try? await track.load(.preferredTransform) else {
+            return CGSize(width: maxDimension, height: maxDimension)
         }
-        
-        let size = naturalSize.applying(preferredTransform)
+
+        let size = naturalSize.applying(transform)
         let width = abs(size.width)
         let height = abs(size.height)
-        
+
         if width <= maxDimension && height <= maxDimension {
             return CGSize(width: width, height: height)
         }
-        
+
         let aspectRatio = width / height
+
         if width > height {
-            return CGSize(width: maxDimension, height: maxDimension / aspectRatio)
+            return CGSize(
+                width: maxDimension,
+                height: maxDimension / aspectRatio
+            )
         } else {
-            return CGSize(width: maxDimension * aspectRatio, height: maxDimension)
+            return CGSize(
+                width: maxDimension * aspectRatio,
+                height: maxDimension
+            )
         }
     }
-    
-    private static func copyVideoFallback(sourceURL: URL, destinationURL: URL) async -> URL? {
+
+    // fallback: copy video without changes if export-errors
+    private static func copyVideoFallback(
+        sourceURL: URL,
+        destinationURL: URL
+    ) async -> URL? {
         do {
             try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
             return destinationURL
@@ -176,21 +203,23 @@ class FileManagerHelper {
             return nil
         }
     }
-    
+
+    // returns URL of saved video if there
     static func getVideoURL(fileName: String) -> URL? {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
-        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
-        return url
+        return FileManager.default.fileExists(atPath: url.path) ? url : nil
     }
-    
+
     // MARK: - Media Cleanup
-    
+
+    // deletes media from exercise
     static func deleteMediaFiles(for exercise: Exercise) {
         for mediaItem in exercise.mediaItems {
             deleteFileFromDocuments(fileName: mediaItem.fileName)
         }
     }
-    
+
+    // deletes media from training session
     static func deleteMediaFiles(for session: TrainingSession) {
         for exercise in session.exercises {
             deleteMediaFiles(for: exercise)
