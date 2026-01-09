@@ -264,7 +264,7 @@ struct ExerciseDetailView: View {
         let newSet = Exercise.ExerciseSet("Set \(newIndex)")
 
         var copy = exercise.sets
-        copy.insert(newSet, at: 0)
+        copy.append(newSet)
         exercise.sets = copy
 
 #if os(iOS)
