@@ -12,8 +12,6 @@ struct AddButtonCircle: View {
                 handleAdd()
             }
         }
-        .font(.title3)
-        .controlSize(.large)
         .buttonStyle(.borderedProminent)
         .tint(.green)
         .foregroundStyle(.white)
