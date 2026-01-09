@@ -23,14 +23,14 @@ struct SetCardStyle: View {
             .background(Color.gray.opacity(0.1))
             
             // Sets List
-            List {
-                let rows = Array(exercise.sets.enumerated())
-                ForEach(rows, id: \.element.id) { index, set in
-                    let displayNumber = index + 1
-                    
+            ScrollViewReader { proxy in
+                List {
+                    let rows = Array(exercise.sets.enumerated())
+                    ForEach(rows, id: \.element.id) { index, set in
+                        let displayNumber = index + 1
+                        
                     HStack {
                         Text("\(displayNumber). Set")
-                            .font(.body)
                         Spacer()
                         TextField(
                             "0",
@@ -44,51 +44,58 @@ struct SetCardStyle: View {
                         .multilineTextAlignment(.trailing)
                         .frame(width: 60)
                         Text("reps")
-                            .font(.body)
                             .foregroundStyle(.secondary)
                     }
-                    .padding(.vertical, 4)
+                        .padding(.vertical, 4)
+                        .id(set.id)
 #if os(iOS)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            onDeleteSet(set.id)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
-#elseif os(macOS)
-                    .contextMenu {
-                        Button(role: .destructive) {
-                            onDeleteSet(set.id)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
-#endif
-                    .listRowSeparator(.visible)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-                }
-                
-                // Add Set Row
-                HStack {
-                    Spacer()
-                    AddButtonCircle(title: "add Set", onAdd: {
-                        if let newSetID = onAddSet() {
-#if os(iOS)
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                focusedSetID = newSetID
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                onDeleteSet(set.id)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
                             }
-#endif
                         }
-                    })
-                    Spacer()
+#elseif os(macOS)
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                onDeleteSet(set.id)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+#endif
+                        .listRowSeparator(.visible, edges: .bottom)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                        .listRowBackground(Color.clear)
+                    }
+                    
+                    // Add Set Row - always scroll to bottom after adding a new set
+                    HStack {
+                        Spacer()
+                        AddButtonCircle(title: "add Set", onAdd: {
+                            if let newSetID = onAddSet() {
+#if os(iOS)
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                    focusedSetID = newSetID
+                                    withAnimation {
+                                        proxy.scrollTo("addSetButton", anchor: .bottom)
+                                    }
+                                }
+#endif
+                            }
+                        })
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    .listRowBackground(Color.clear)
+                    .id("addSetButton")
                 }
-                .padding(.vertical, 0)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
         }
         .background(.regularMaterial)
         .cornerRadius(12)
@@ -96,6 +103,27 @@ struct SetCardStyle: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.gray.opacity(0.2), lineWidth: 1)
         )
+        .frame(height: cardHeight)
+    }
+    
+    // MARK: - Helperfunctions
+    
+    // calculate card height - different row heights for iOS and macOS
+    private var cardHeight: CGFloat {
+#if os(iOS)
+        let headerHeight: CGFloat = 40
+        let addButtonHeight: CGFloat = 50
+        let setRowHeight: CGFloat = 50
+        let maxHeight: CGFloat = 400
+#elseif os(macOS)
+        let headerHeight: CGFloat = 30
+        let addButtonHeight: CGFloat = 40
+        let setRowHeight: CGFloat = 26
+        let maxHeight: CGFloat = 300
+#endif
+        
+        let totalHeight = headerHeight + addButtonHeight + (CGFloat(exercise.sets.count) * setRowHeight)
+        return min(totalHeight, maxHeight)
     }
 }
 
