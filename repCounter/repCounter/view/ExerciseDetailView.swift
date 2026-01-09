@@ -44,71 +44,21 @@ struct ExerciseDetailView: View {
 
     var body: some View {
         VStack {
-            Text("Sets")
-                .underline()
-                .font(.title2)
-
-            AddButtonCircle(title: "Add Set") {
-                addSet()
-            }
-
-            List {
-
-                let rows = Array(exercise.sets.enumerated())
-
-                ForEach(rows, id: \.element.id) { index, set in
-                    let displayNumber = exercise.sets.count - index // Set 1 unten
-
-#if os(iOS)
-                    HStack {
-                        Text("Set \(displayNumber)")
-                        Spacer()
-                        TextField(
-                            "0",
-                            value: repsBinding(for: set.id),
-                            format: .number
-                        )
-                        .keyboardType(.numberPad)
-                        .focused($focusedSetID, equals: set.id)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 60)
-                        Text("Reps")
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            deleteSet(id: set.id)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
-#elseif os(macOS)
-                    // macOS: Formatierung wie Manual Count
-                    HStack {
-                        Text("Set \(displayNumber)")
-                            .font(.title3)
-                        Spacer()
-                        TextField(
-                            "0",
-                            value: repsBinding(for: set.id),
-                            format: .number
-                        )
-                        .font(.title3)
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 60)
-                        Text("Reps")
-                            .font(.title3)
-                    }
-                    .contextMenu {
-                        Button(role: .destructive) {
-                            deleteSet(id: set.id)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
-#endif
+            
+            // Set Card
+            SetCardStyle(
+                exercise: exercise,
+                focusedSetID: $focusedSetID,
+                onAddSet: {
+                    addSet()
+                },
+                onDeleteSet: { id in
+                    deleteSet(id: id)
+                },
+                repsBinding: { id in
+                    repsBinding(for: id)
                 }
-            }
-            .listStyle(.plain)
+            )
             
             Divider()
                 .padding(.vertical, 8)
@@ -259,7 +209,7 @@ struct ExerciseDetailView: View {
         )
     }
 
-    private func addSet() {
+    private func addSet() -> Exercise.ExerciseSet.ID? {
         let newIndex = exercise.sets.count + 1
         let newSet = Exercise.ExerciseSet("Set \(newIndex)")
 
@@ -267,11 +217,7 @@ struct ExerciseDetailView: View {
         copy.append(newSet)
         exercise.sets = copy
 
-#if os(iOS)
-        DispatchQueue.main.async {
-            focusedSetID = newSet.id
-        }
-#endif
+        return newSet.id
     }
 
     private func deleteSet(id: Exercise.ExerciseSet.ID) {
