@@ -5,7 +5,6 @@ import SwiftData
 final class Exercise: Identifiable {
     var id: UUID = UUID()
     var name: String
-    var quickReps: Int = 0 // Reps, die über +/- gezählt werden
     var sets: [ExerciseSet] = [] // „richtige“ Sets (als eingebettete Werttypen gespeichert)
     var notes: String = ""
     var mediaItems: [MediaItem] = [] // images or videos within exercise
@@ -36,6 +35,6 @@ final class Exercise: Identifiable {
     }
 
     var totalReps: Int {
-        quickReps + sets.reduce(0) { $0 + $1.reps }
+        sets.reduce(0) { $0 + $1.reps }
     }
 }

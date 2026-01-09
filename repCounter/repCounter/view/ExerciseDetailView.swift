@@ -53,15 +53,6 @@ struct ExerciseDetailView: View {
             }
 
             List {
-                // Manual count Row
-                if exercise.quickReps > 0 {
-                    HStack {
-                        Text("Manual Count")
-                        Spacer()
-                        Text("\(exercise.quickReps) Reps")
-                            .font(.body)
-                    }
-                }
 
                 let rows = Array(exercise.sets.enumerated())
 
