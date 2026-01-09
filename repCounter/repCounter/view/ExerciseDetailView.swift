@@ -59,6 +59,7 @@ struct ExerciseDetailView: View {
                     repsBinding(for: id)
                 }
             )
+            .padding(.horizontal)
             
             Divider()
                 .padding(.vertical, 8)
