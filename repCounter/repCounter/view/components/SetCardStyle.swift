@@ -86,7 +86,7 @@ struct SetCardStyle: View {
                                             focusedSetID = newSetID
                                             withAnimation {
                                                 proxy
-                                                    .scrollTo("addSetButton", anchor: .bottom)
+                                                    .scrollTo("addSetButton", anchor: .center)
                                             }
                                         }
 #endif
@@ -134,6 +134,8 @@ struct SetCardStyle: View {
         return min(totalHeight, maxHeight)
     }
 }
+
+// MARK: - Preview
 
 #Preview {
     PreviewWrapper()
