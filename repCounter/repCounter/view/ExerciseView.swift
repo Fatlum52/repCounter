@@ -5,6 +5,12 @@ struct ExerciseView: View {
 
     @Bindable var trainingSession: TrainingSession
     @Environment(\.modelContext) private var modelContext
+    
+#if os(macOS)
+    @Binding var selectedExercise: Exercise?
+#else
+    @State private var selectedExercise: Exercise? = nil
+#endif
 
     @State private var isAddingExercise: Bool = false
     @State private var isEditorPresented: Bool = false
@@ -13,75 +19,12 @@ struct ExerciseView: View {
     @FocusState private var isNewExerciseFocused: Bool
 
     var body: some View {
-        NavigationStack {
-            VStack {
-                AddButtonCircle(title: "Add Exercise") {
-                    isAddingExercise.toggle()
-                }
-
-                if isAddingExercise {
-                    TextField("Add Exercise", text: $draftName)
-                        .onSubmit(addExercise)
-                        .padding(15)
-                        .textFieldStyle(.roundedBorder)
-                        .font(.title3)
-                        .focused($isNewExerciseFocused)
-                        .onAppear { isNewExerciseFocused = true }
-                }
-
-                if !trainingSession.exercises.isEmpty {
-                    List {
-                        ForEach(trainingSession.exercises) { exercise in
-                            NavigationLink {
-                                ExerciseDetailView(exercise: exercise)
-                            } label: {
-                                ExerciseRow(exercise: exercise)
-                            }
+        exerciseListContent
 #if os(iOS)
-                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                Button {
-                                    editingExercise = exercise
-                                    isEditorPresented = true
-                                } label: {
-                                    Image(systemName: "pencil")
-                                }
-                                .tint(.green)
-                            }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
-                                    deleteExercise(exercise)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
-#elseif os(macOS)
-                            .contextMenu {
-                                Button {
-                                    editingExercise = exercise
-                                    isEditorPresented = true
-                                } label: {
-                                    Label("Edit", systemImage: "pencil")
-                                }
-
-                                Button(role: .destructive) {
-                                    deleteExercise(exercise)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
-#endif
-                        }
-                    }
-                    .listStyle(.plain)
-                } else {
-                    Text("No exercises yet")
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 3)
-                }
-            }
-            .navigationTitle(trainingSession.name + " - " + trainingSession.formattedDate)
-#if os(iOS)
+            .navigationTitle(trainingSession.name)
             .navigationBarTitleDisplayMode(.inline)
+#else
+            .navigationTitle(trainingSession.name + " - " + trainingSession.formattedDate)
 #endif
             .overlay {
                 if let exercise = editingExercise {
@@ -97,10 +40,125 @@ struct ExerciseView: View {
                     )
                 }
             }
+    }
+    
+    // MARK: - Exercise List Content
+    
+    private var exerciseListContent: some View {
+        VStack(spacing: 0) {
+#if os(macOS)
+            // macOS: Add Button with padding
+            VStack {
+                AddButtonCircle(title: "Add Exercise") {
+                    isAddingExercise.toggle()
+                }
+                .padding(.top, 8)
+                .padding(.horizontal, 8)
+                
+                if isAddingExercise {
+                    TextField("Add Exercise", text: $draftName)
+                        .onSubmit(addExercise)
+                        .padding(15)
+                        .textFieldStyle(.roundedBorder)
+                        .font(.title3)
+                        .focused($isNewExerciseFocused)
+                        .onAppear { isNewExerciseFocused = true }
+                        .padding(.horizontal, 8)
+                }
+            }
+            
+            if !trainingSession.exercises.isEmpty {
+                // macOS: Simple List with selection
+                List(selection: $selectedExercise) {
+                    ForEach(trainingSession.exercises) { exercise in
+                        HStack {
+                            Text(exercise.name)
+                                .font(.headline)
+                            Spacer()
+                            Text("\(exercise.totalReps) Reps")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                        .tag(exercise)
+                        .contextMenu {
+                            Button {
+                                editingExercise = exercise
+                                isEditorPresented = true
+                            } label: {
+                                Label("Edit", systemImage: "pencil")
+                            }
+
+                            Button(role: .destructive) {
+                                deleteExercise(exercise)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    }
+                }
+                .listStyle(.sidebar)
+                .scrollContentBackground(.hidden)
+            } else {
+                Text("No exercises yet")
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 3)
+            }
+#else
+            // iOS: Add Button
+            AddButtonCircle(title: "Add Exercise") {
+                isAddingExercise.toggle()
+            }
+
+            if isAddingExercise {
+                TextField("Add Exercise", text: $draftName)
+                    .onSubmit(addExercise)
+                    .padding(15)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.title3)
+                    .focused($isNewExerciseFocused)
+                    .onAppear { isNewExerciseFocused = true }
+            }
+
+            if !trainingSession.exercises.isEmpty {
+                // iOS: Cards in ScrollView
+                ScrollView {
+                    VStack(spacing: 16) {
+                        ForEach(trainingSession.exercises) { exercise in
+                            NavigationLink {
+                                ExerciseDetailView(exercise: exercise)
+                            } label: {
+                                ExerciseCard(exercise: exercise)
+                            }
+                            .contextMenu {
+                                Button {
+                                    editingExercise = exercise
+                                    isEditorPresented = true
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+
+                                Button(role: .destructive) {
+                                    deleteExercise(exercise)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                        }
+                    }
+                    .padding()
+                }
+            } else {
+                Text("No exercises yet")
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 3)
+            }
+#endif
+            
+            Spacer()
         }
     }
     
-    ////////////////// HELPER FUNCTION //////////////////
+    // MARK: - Helper Functions
 
     private func cancelEdit() {
         isEditorPresented = false
@@ -144,6 +202,8 @@ struct ExerciseView: View {
     container.mainContext.insert(session)
     container.mainContext.insert(exercise)
 
-    return ExerciseView(trainingSession: session)
-        .modelContainer(container)
+    return NavigationStack {
+        ExerciseView(trainingSession: session, selectedExercise: .constant(nil))
+    }
+    .modelContainer(container)
 }
