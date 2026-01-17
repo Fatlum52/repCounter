@@ -192,18 +192,28 @@ struct ExerciseView: View {
 }
 
 #Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: TrainingSession.self, Exercise.self, configurations: config)
+    ExerciseViewPreview()
+}
 
-    let session = TrainingSession(name: "Push Day")
-    let exercise = Exercise("Bench Press")
-    session.exercises.append(exercise)
+struct ExerciseViewPreview: View {
+    var body: some View {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try! ModelContainer(for: TrainingSession.self, Exercise.self, configurations: config)
 
-    container.mainContext.insert(session)
-    container.mainContext.insert(exercise)
+        let session = TrainingSession(name: "Push Day")
+        let exercise = Exercise("Bench Press")
+        session.exercises.append(exercise)
 
-    return NavigationStack {
-        ExerciseView(trainingSession: session, selectedExercise: .constant(nil))
+        container.mainContext.insert(session)
+        container.mainContext.insert(exercise)
+
+        return NavigationStack {
+#if os(macOS)
+            ExerciseView(trainingSession: session, selectedExercise: .constant(nil))
+#else
+            ExerciseView(trainingSession: session)
+#endif
+        }
+        .modelContainer(container)
     }
-    .modelContainer(container)
 }
