@@ -30,23 +30,23 @@ struct SetCardStyle: View {
                         ForEach(rows, id: \.element.id) { index, set in
                             let displayNumber = index + 1
                             
-                        HStack {
-                            Text("\(displayNumber). Set")
-                            Spacer()
-                            TextField(
-                                "0",
-                                value: repsBinding(set.id),
-                                format: .number
-                            )
+                            HStack {
+                                Text("\(displayNumber). Set")
+                                Spacer()
+                                TextField(
+                                    "0",
+                                    value: repsBinding(set.id),
+                                    format: .number
+                                )
 #if os(iOS)
-                            .keyboardType(.numberPad)
-                            .focused($focusedSetID, equals: set.id)
+                                .keyboardType(.numberPad)
+                                .focused($focusedSetID, equals: set.id)
 #endif
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
-                            Text("reps")
-                                .foregroundStyle(.secondary)
-                        }
+                                .multilineTextAlignment(.trailing)
+                                .frame(width: 60)
+                                Text("reps")
+                                    .foregroundStyle(.secondary)
+                            }
                             .padding(.vertical, 4)
                             .id(set.id)
 #if os(iOS)
@@ -74,23 +74,25 @@ struct SetCardStyle: View {
                         // Add Set Button - always scroll to bottom after adding a new set
                         HStack {
                             Spacer()
-                            AddButtonCircle(title: "add Set", onAdd: {
-                                if let newSetID = onAddSet() {
+                            AddButtonCircle(
+                                title: "add Set",
+                                onAdd: {
+                                    if let newSetID = onAddSet() {
 #if os(iOS)
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                        focusedSetID = newSetID
-                                        withAnimation {
-                                            proxy.scrollTo("addSetButton", anchor: .bottom)
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                            focusedSetID = newSetID
+                                            withAnimation {
+                                                proxy
+                                                    .scrollTo("addSetButton", anchor: .bottom)
+                                            }
                                         }
-                                    }
 #endif
-                                }
-                            })
+                                    }
+                                })
                             Spacer()
                         }
                         .padding(.horizontal)
                         .padding(.vertical, 4)
-                        .background(Color.gray.opacity(0.1))
                         .id("addSetButton")
                     }
                     .listSectionSeparator(.hidden, edges: [.top, .bottom])
@@ -103,8 +105,9 @@ struct SetCardStyle: View {
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                .stroke(Color.gray.opacity(0.3), lineWidth: 1.5)
         )
+        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
         .frame(height: cardHeight)
     }
     
