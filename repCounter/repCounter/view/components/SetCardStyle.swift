@@ -70,31 +70,30 @@ struct SetCardStyle: View {
                             .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                             .listRowBackground(Color.clear)
                         }
-                    }
-                    .listSectionSeparator(.hidden, edges: .top)
-                    
-                    // Add Set Row - always scroll to bottom after adding a new set
-                    HStack {
-                        Spacer()
-                        AddButtonCircle(title: "add Set", onAdd: {
-                            if let newSetID = onAddSet() {
+                    } footer: {
+                        // Add Set Button - always scroll to bottom after adding a new set
+                        HStack {
+                            Spacer()
+                            AddButtonCircle(title: "add Set", onAdd: {
+                                if let newSetID = onAddSet() {
 #if os(iOS)
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                    focusedSetID = newSetID
-                                    withAnimation {
-                                        proxy.scrollTo("addSetButton", anchor: .bottom)
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                        focusedSetID = newSetID
+                                        withAnimation {
+                                            proxy.scrollTo("addSetButton", anchor: .bottom)
+                                        }
                                     }
-                                }
 #endif
-                            }
-                        })
-                        Spacer()
+                                }
+                            })
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.vertical, 4)
+                        .background(Color.gray.opacity(0.1))
+                        .id("addSetButton")
                     }
-                    .frame(maxWidth: .infinity)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                    .listRowBackground(Color.clear)
-                    .id("addSetButton")
+                    .listSectionSeparator(.hidden, edges: [.top, .bottom])
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
