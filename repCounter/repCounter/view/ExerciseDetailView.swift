@@ -45,7 +45,11 @@ struct ExerciseDetailView: View {
     
     var body: some View {
         VStack {
-            
+#if os(macOS)
+            // macOS: Add padding at top
+            Spacer()
+                .frame(height: 8)
+#endif
             // Set Card
             SetCardStyle(
                 exercise: exercise,
