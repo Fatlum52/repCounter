@@ -62,44 +62,43 @@ struct ExerciseDetailView: View {
             )
             .padding(.horizontal)
             
-            Divider()
-                .padding(.vertical, 8)
             
-            // Notes Button
-            Button("Notes", systemImage: "list.bullet.clipboard") {
-                showNotesSheet = true
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            
-            // Media Button
-            Menu {
+            HStack {
+                // Notes Button
+                Button("Notes", systemImage: "list.bullet.clipboard") {
+                    showNotesSheet = true
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                
+                // Media Button
+                Menu {
 #if os(iOS)
-                Button("Select Media", systemImage: "photo.badge.plus") {
-                    showPhotoLibrary = true
-                }
-                Button("Take Photo", systemImage: "camera") {
-                    cameraMode = .photo
-                    showingCamera = true
-                }
-                Button("Record Video", systemImage: "video") {
-                    cameraMode = .video
-                    showingCamera = true
-                }
+                    Button("Select Media", systemImage: "photo.badge.plus") {
+                        showPhotoLibrary = true
+                    }
+                    Button("Take Photo", systemImage: "camera") {
+                        cameraMode = .photo
+                        showingCamera = true
+                    }
+                    Button("Record Video", systemImage: "video") {
+                        cameraMode = .video
+                        showingCamera = true
+                    }
 #elseif os(macOS)
-                Button("Select Media", systemImage: "photo.badge.plus") {
-                    showFilePicker = true
-                }
+                    Button("Select Media", systemImage: "photo.badge.plus") {
+                        showFilePicker = true
+                    }
 #endif
-                Button("Show Media", systemImage: "photo.stack") {
-                    showMediaGallery = true
+                    Button("Show Media", systemImage: "photo.stack") {
+                        showMediaGallery = true
+                    }
+                } label: {
+                    Label("Media", systemImage: "photo.on.rectangle")
                 }
-            } label: {
-                Label("Media", systemImage: "photo.on.rectangle")
-                    .frame(maxWidth: .infinity)
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
             
         }
         .navigationTitle(exercise.name)
@@ -278,4 +277,15 @@ struct ExerciseDetailView: View {
         }
     }
 #endif
+}
+
+#Preview {
+    let config = ModelConfiguration(isStoredInMemoryOnly: true)
+    let container = try! ModelContainer(for: Exercise.self, configurations: config)
+    let exercise = Exercise("Pushup")
+    
+    return NavigationStack {
+        ExerciseDetailView(exercise: exercise)
+            .modelContainer(container)
+    }
 }
