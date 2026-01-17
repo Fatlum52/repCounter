@@ -32,6 +32,7 @@ struct SetCardStyle: View {
                             
                             HStack {
                                 Text("\(displayNumber). Set")
+                                    .font(.title3)
                                 Spacer()
                                 TextField(
                                     "0",
@@ -43,11 +44,13 @@ struct SetCardStyle: View {
                                 .focused($focusedSetID, equals: set.id)
 #endif
                                 .multilineTextAlignment(.trailing)
-                                .frame(width: 60)
+                                .frame(width: 80)
+                                .font(.title3)
                                 Text("reps")
+                                    .font(.body)
                                     .foregroundStyle(.secondary)
                             }
-                            .padding(.vertical, 4)
+                            .padding(.vertical, 12)
                             .id(set.id)
 #if os(iOS)
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
@@ -123,7 +126,7 @@ struct SetCardStyle: View {
 #elseif os(macOS)
         let headerHeight: CGFloat = 30
         let addButtonHeight: CGFloat = 40
-        let setRowHeight: CGFloat = 26
+        let setRowHeight: CGFloat = 50
         let maxHeight: CGFloat = 300
 #endif
         
