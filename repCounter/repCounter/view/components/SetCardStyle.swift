@@ -25,50 +25,53 @@ struct SetCardStyle: View {
             // Sets List
             ScrollViewReader { proxy in
                 List {
-                    let rows = Array(exercise.sets.enumerated())
-                    ForEach(rows, id: \.element.id) { index, set in
-                        let displayNumber = index + 1
-                        
-                    HStack {
-                        Text("\(displayNumber). Set")
-                        Spacer()
-                        TextField(
-                            "0",
-                            value: repsBinding(set.id),
-                            format: .number
-                        )
+                    Section {
+                        let rows = Array(exercise.sets.enumerated())
+                        ForEach(rows, id: \.element.id) { index, set in
+                            let displayNumber = index + 1
+                            
+                        HStack {
+                            Text("\(displayNumber). Set")
+                            Spacer()
+                            TextField(
+                                "0",
+                                value: repsBinding(set.id),
+                                format: .number
+                            )
 #if os(iOS)
-                        .keyboardType(.numberPad)
-                        .focused($focusedSetID, equals: set.id)
+                            .keyboardType(.numberPad)
+                            .focused($focusedSetID, equals: set.id)
 #endif
-                        .multilineTextAlignment(.trailing)
-                        .frame(width: 60)
-                        Text("reps")
-                            .foregroundStyle(.secondary)
-                    }
-                        .padding(.vertical, 4)
-                        .id(set.id)
-#if os(iOS)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) {
-                                onDeleteSet(set.id)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 60)
+                            Text("reps")
+                                .foregroundStyle(.secondary)
                         }
+                            .padding(.vertical, 4)
+                            .id(set.id)
+#if os(iOS)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                Button(role: .destructive) {
+                                    onDeleteSet(set.id)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
 #elseif os(macOS)
-                        .contextMenu {
-                            Button(role: .destructive) {
-                                onDeleteSet(set.id)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    onDeleteSet(set.id)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
-                        }
 #endif
-                        .listRowSeparator(.visible, edges: .bottom)
-                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-                        .listRowBackground(Color.clear)
+                            .listRowSeparator(.visible, edges: .bottom)
+                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                            .listRowBackground(Color.clear)
+                        }
                     }
+                    .listSectionSeparator(.hidden, edges: .top)
                     
                     // Add Set Row - always scroll to bottom after adding a new set
                     HStack {
