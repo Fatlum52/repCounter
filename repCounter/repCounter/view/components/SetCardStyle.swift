@@ -14,10 +14,12 @@ struct SetCardStyle: View {
             // Header Row
             HStack {
                 Text("Set")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
                 Spacer()
+                Text("Total Reps: \(exercise.totalReps)")
             }
+            .font(.title3)
+            .font(.headline)
+            .foregroundStyle(.secondary)
             .padding(.horizontal)
             .padding(.vertical, 8)
             .background(Color.gray.opacity(0.1))
