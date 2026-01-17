@@ -69,6 +69,8 @@ struct ExerciseDetailView: View {
             Button("Notes", systemImage: "list.bullet.clipboard") {
                 showNotesSheet = true
             }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
             
             // Media Button
             Menu {
