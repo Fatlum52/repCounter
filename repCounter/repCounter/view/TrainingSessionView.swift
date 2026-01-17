@@ -16,15 +16,57 @@ struct TrainingSessionView: View {
     @State private var isEditorPresented = false
     @State private var editingSession: TrainingSession?
     @State private var editingName = ""
-    @State private var selectedSessionID: UUID?
+    @State private var selectedSession: TrainingSession?
+    @State private var selectedExercise: Exercise?
 
     var body: some View {
+#if os(macOS)
         NavigationSplitView {
+            // Sidebar: Sessions
+            sessionListContent
+                .navigationSplitViewColumnWidth(min: 250, ideal: 300, max: 350)
+        } content: {
+            // Content: Exercises
+            if let session = selectedSession ?? trainingList.first {
+                ExerciseView(
+                    trainingSession: session,
+                    selectedExercise: $selectedExercise
+                )
+            } else {
+                Text("Select a training session")
+                    .foregroundStyle(.secondary)
+            }
+        } detail: {
+            // Detail: ExerciseDetailView
+            if let exercise = selectedExercise {
+                ExerciseDetailView(exercise: exercise)
+            } else {
+                Text("Select an exercise")
+                    .foregroundStyle(.secondary)
+            }
+        }
+#else
+        // iOS: Simple NavigationStack
+        NavigationStack {
+            sessionListContent
+        }
+#endif
+    }
+    
+    // MARK: - Session List Content
+    
+    private var sessionListContent: some View {
+        VStack(spacing: 0) {
+#if os(macOS)
+            // macOS: Add Button with padding
             VStack {
                 AddButtonCircle(title: "Add Training Session") {
                     isAddingSession.toggle()
                 }
-
+                .padding(.top, 8)
+                .padding(.bottom, 20)
+                .padding(.horizontal, 8)
+                
                 if isAddingSession {
                     TextField("Add Training", text: $newSessionName)
                         .onSubmit(addSession)
@@ -33,38 +75,84 @@ struct TrainingSessionView: View {
                         .font(.title3)
                         .focused($isEditFieldFocused)
                         .onAppear { isEditFieldFocused = true }
+                        .padding(.horizontal, 8)
                 }
+            }
+            
+            if !trainingList.isEmpty {
+                // macOS: Simple List in Sidebar
+                List(trainingList, selection: Binding(
+                    get: { selectedSession?.id },
+                    set: { newID in
+                        selectedSession = trainingList.first { $0.id == newID }
+                        selectedExercise = nil // Reset exercise selection when session changes
+                    }
+                )) { training in
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(training.name)
+                                .font(.headline)
+                            Text(training.formattedDate)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            if !training.exercises.isEmpty {
+                                Text("\(training.exercises.count) exercises")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                            }
+                        }
+                        Spacer()
+                    }
+                    .padding(.vertical, 4)
+                    .tag(training.id)
+                    .contextMenu {
+                        Button {
+                            editingSession = training
+                            editingName = training.name
+                            isEditorPresented = true
+                        } label: {
+                            Label("Edit", systemImage: "pencil")
+                        }
+                        
+                        Button(role: .destructive) {
+                            deleteSession(training)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                }
+                .listStyle(.sidebar)
+                .scrollContentBackground(.hidden)
+            } else {
+                Text("No trainings yet")
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 3)
+            }
+#else
+            AddButtonCircle(title: "Add Training Session") {
+                isAddingSession.toggle()
+            }
 
-                if !trainingList.isEmpty {
-                    List(selection: $selectedSessionID) {
+            if isAddingSession {
+                TextField("Add Training", text: $newSessionName)
+                    .onSubmit(addSession)
+                    .padding(15)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.title3)
+                    .focused($isEditFieldFocused)
+                    .onAppear { isEditFieldFocused = true }
+            }
+
+            if !trainingList.isEmpty {
+                // iOS: Cards in ScrollView
+                ScrollView {
+                    VStack(spacing: 16) {
                         ForEach(trainingList) { training in
-                            NavigationLink(value: training.id) {
-                                HStack {
-                                    Text(training.name).font(.title2)
-                                    Spacer()
-                                    Text(training.formattedDate)
-                                }
+                            NavigationLink {
+                                ExerciseView(trainingSession: training)
+                            } label: {
+                                TrainingSessionCard(trainingSession: training)
                             }
-                            .tag(training.id)
-#if os(iOS)
-                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                Button {
-                                    editingSession = training
-                                    editingName = training.name
-                                    isEditorPresented = true
-                                } label: {
-                                    Image(systemName: "pencil")
-                                }
-                                .tint(.green)
-                            }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
-                                    deleteSession(training)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
-#elseif os(macOS)
                             .contextMenu {
                                 Button {
                                     editingSession = training
@@ -80,49 +168,35 @@ struct TrainingSessionView: View {
                                     Label("Delete", systemImage: "trash")
                                 }
                             }
-#endif
                         }
                     }
-                    .listStyle(.plain)
-                } else {
-                    Text("No trainings yet")
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 3)
-                }
-            }
-#if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-#endif
-            .overlay {
-                NameEditOverlay(
-                    title: "Edit Session name",
-                    onCancel: cancelEdit,
-                    onSave: saveEdit,
-                    isPresented: $isEditorPresented,
-                    name: $editingName
-                )
-            }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
-        } detail: {
-            if let selectedID = selectedSessionID,
-               let selectedSession = trainingList.first(where: { $0.id == selectedID }) {
-                NavigationStack {
-                    ExerciseView(trainingSession: selectedSession)
-                }
-            } else if let firstSession = trainingList.first {
-                NavigationStack {
-                    ExerciseView(trainingSession: firstSession)
+                    .padding()
                 }
             } else {
-                Text("Select a training session")
+                Text("No trainings yet")
                     .foregroundStyle(.secondary)
+                    .padding(.top, 3)
             }
+#endif
+            
+            Spacer()
+        }
+#if os(iOS)
+        .navigationTitle("Training Sessions")
+        .navigationBarTitleDisplayMode(.inline)
+#endif
+        .overlay {
+            NameEditOverlay(
+                title: "Edit Session name",
+                onCancel: cancelEdit,
+                onSave: saveEdit,
+                isPresented: $isEditorPresented,
+                name: $editingName
+            )
         }
     }
     
-    ////////////////// HELPER FUNCTION //////////////////
+    // MARK: - Helper Functions
 
     private func addSession() {
         let name = newSessionName.isEmpty ? "Training Session" : newSessionName
@@ -138,8 +212,8 @@ struct TrainingSessionView: View {
         FileManagerHelper.deleteMediaFiles(for: session)
         
         // If the deleted session is currently selected, reset the selection
-        if selectedSessionID == session.id {
-            selectedSessionID = nil
+        if selectedSession?.id == session.id {
+            selectedSession = nil
         }
         modelContext.delete(session)
     }
