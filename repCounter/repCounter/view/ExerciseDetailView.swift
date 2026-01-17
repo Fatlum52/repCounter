@@ -27,7 +27,7 @@ struct Movie: Transferable {
 #endif
 
 struct ExerciseDetailView: View {
-
+    
     @Bindable var exercise: Exercise
     @FocusState private var focusedSetID: Exercise.ExerciseSet.ID?
 #if os(iOS)
@@ -41,7 +41,8 @@ struct ExerciseDetailView: View {
     @State private var showFilePicker: Bool = false
 #endif
     @State private var showMediaGallery: Bool = false
-
+    @State private var showNotesSheet: Bool = false
+    
     var body: some View {
         VStack {
             
@@ -64,8 +65,10 @@ struct ExerciseDetailView: View {
             Divider()
                 .padding(.vertical, 8)
             
-            // Notes Area
-            
+            // Notes Button
+            Button("Notes", systemImage: "list.bullet.clipboard") {
+                showNotesSheet = true
+            }
             
             // Media Button
             Menu {
@@ -149,6 +152,9 @@ struct ExerciseDetailView: View {
         .sheet(isPresented: $showMediaGallery) {
             MediaGalleryView(exercise: exercise)
         }
+        .sheet(isPresented: $showNotesSheet) {
+            NotesSheetView(notes: $exercise.notes)
+        }
 #if os(iOS)
         .sheet(isPresented: $showingCamera) {
             CameraView(
@@ -175,9 +181,10 @@ struct ExerciseDetailView: View {
         }
 #endif
     }
-
+    
+    
     ////////////////// HELPER FUNCTION //////////////////
-
+    
     private func repsBinding(for id: Exercise.ExerciseSet.ID) -> Binding<Int> {
         Binding(
             get: {
@@ -191,18 +198,18 @@ struct ExerciseDetailView: View {
             }
         )
     }
-
+    
     private func addSet() -> Exercise.ExerciseSet.ID? {
         let newIndex = exercise.sets.count + 1
         let newSet = Exercise.ExerciseSet("Set \(newIndex)")
-
+        
         var copy = exercise.sets
         copy.append(newSet)
         exercise.sets = copy
-
+        
         return newSet.id
     }
-
+    
     private func deleteSet(id: Exercise.ExerciseSet.ID) {
         var copy = exercise.sets
         copy.removeAll { $0.id == id }
