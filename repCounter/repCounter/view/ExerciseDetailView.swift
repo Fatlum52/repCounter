@@ -51,7 +51,7 @@ struct ExerciseDetailView: View {
                 .frame(height: 8)
 #endif
             // Set Card
-            SetCardStyle(
+            CardSet(
                 exercise: exercise,
                 focusedSetID: $focusedSetID,
                 onAddSet: {
