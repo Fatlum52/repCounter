@@ -97,7 +97,6 @@ struct SetCardStyle: View {
                             Spacer()
                         }
                         .padding(.horizontal)
-                        .padding(.vertical, 4)
                         .id("addSetButton")
                     }
                     .listSectionSeparator(.hidden, edges: [.top, .bottom])
@@ -122,7 +121,7 @@ struct SetCardStyle: View {
     private var cardHeight: CGFloat {
 #if os(iOS)
         let headerHeight: CGFloat = 40
-        let addButtonHeight: CGFloat = 50
+        let addButtonHeight: CGFloat = 60
         let setRowHeight: CGFloat = 50
         let maxHeight: CGFloat = 400
 #elseif os(macOS)
