@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-struct SetCardStyle: View {
+struct CardSet: View {
     
     @Bindable var exercise: Exercise
     @FocusState.Binding var focusedSetID: Exercise.ExerciseSet.ID?
@@ -158,7 +158,7 @@ struct PreviewWrapper: View {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try! ModelContainer(for: Exercise.self, configurations: config)
         
-        SetCardStyle(
+        CardSet(
             exercise: exercise,
             focusedSetID: $focusedSetID,
             onAddSet: {
