@@ -26,7 +26,7 @@ struct repCounterApp: App {
 
     var body: some Scene {
         WindowGroup {
-            TrainingSessionView()
+            MainTabView()
         }
         .modelContainer(sharedModelContainer)
     }
