@@ -13,6 +13,10 @@ struct MainTabView: View {
             Tab("Workouts", systemImage: "figure.run") {
                 TrainingSessionView()
             }
+            
+            Tab("This is a test", systemImage: "testtube.2") {
+                TestView()
+            }
         }
     }
 }
