@@ -14,8 +14,8 @@ struct MainTabView: View {
                 TrainingSessionView()
             }
             
-            Tab("This is a test", systemImage: "testtube.2") {
-                TestView()
+            Tab("Library", systemImage: "building.columns.fill") {
+                LibraryView()
             }
         }
     }
