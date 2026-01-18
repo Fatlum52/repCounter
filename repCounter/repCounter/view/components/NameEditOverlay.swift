@@ -13,46 +13,43 @@ struct NameEditOverlay: View {
     var body: some View {
         if isPresented {
             GeometryReader { geo in
-                // Breite ~ 2/3, Höhe ~ 1/3 der Bildschirmbreite
+                // width ~ 2/3, height ~ 1/3 of screen size
                 let boxW = geo.size.width * 0.66
-                let boxH = max(geo.size.width * 0.33, 180) // Mindesthöhe für Inhalt
-
+                let boxH = geo.size.width * 0.38 // minimal height for content
+                
                 ZStack {
                     // Dimmer
                     Color.black.opacity(0.35)
                         .ignoresSafeArea()
                         .onTapGesture { handleCancle() }
-
-                    // Dialog-Karte
+                    
+                    // dialogue-card
                     VStack(spacing: 14) {
                         Text(title)
                             .font(.headline)
-
+                        
+                        // textfield
                         TextField("Name", text: $name)
                             .textFieldStyle(.roundedBorder)
                             .focused($isFieldFocused)
                             .onSubmit { handleSafe() }
-
-                        Spacer()
-
+                        
+                        // buttons
                         HStack(spacing: 24) {
-                            Button {
+                            Button("", systemImage: "x.circle") {
                                 handleCancle()
-                            } label: {
-                                Label("Cancel", systemImage: "x.circle")
                             }
-                            .buttonStyle(.borderedProminent)
                             .tint(.red)
-
-                            Button {
+                            
+                            Button("", systemImage: "checkmark.circle") {
                                 handleSafe()
-                            } label: {
-                                Label("Save", systemImage: "checkmark.arrow.trianglehead.clockwise")
                             }
-                            .buttonStyle(.borderedProminent)
                             .tint(.green)
                             .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                         }
+                        .labelStyle(.iconOnly)
+                        .buttonStyle(.borderedProminent)
+                        .font(.title3)
                     }
                     .padding(16)
                     .frame(width: boxW, height: boxH, alignment: .top)
@@ -67,6 +64,8 @@ struct NameEditOverlay: View {
         }
     }
     
+    // MARK: - helper functions
+    
     private func handleSafe() {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else{
             return
@@ -79,4 +78,19 @@ struct NameEditOverlay: View {
         onCancel()
         isPresented = false
     }
+}
+
+#Preview {
+    @Previewable
+    @State var isPresented = true
+    @Previewable
+    @State var name = "Test Name"
+
+    return NameEditOverlay(
+        title: "Edit name",
+        onCancel: { },
+        onSave: { },
+        isPresented: $isPresented,
+        name: $name
+    )
 }
