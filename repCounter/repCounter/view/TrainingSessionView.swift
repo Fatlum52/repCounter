@@ -129,9 +129,23 @@ struct TrainingSessionView: View {
                     .padding(.top, 3)
             }
 #else
-            AddButtonCircle(title: "Add Training Session") {
-                isAddingSession.toggle()
+            //AddButtonCircle(title: "Add Training Session") {
+            //    isAddingSession.toggle()
+            //}
+            
+            Menu("Add Training Session", systemImage: "plus.circle") {
+                
+                Button("New Training Session") {
+                    isAddingSession.toggle()
+                }
+                
+                Button("From Library") {
+                    //showTemplates = true
+                }
             }
+            .buttonStyle(.borderedProminent)
+            .tint(.green)
+            .foregroundStyle(.white)
 
             if isAddingSession {
                 TextField("Add Training", text: $newSessionName)
