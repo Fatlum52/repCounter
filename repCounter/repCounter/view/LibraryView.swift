@@ -1,22 +1,15 @@
+//
+//  LibraryView.swift
+//  repCounter
+//
+//  Created by Fatlum Cikaqi on 19.01.2026.
+//
+
 import SwiftUI
 
 struct LibraryView: View {
-    
-    @State private var showText:Bool = false
-    
     var body: some View {
-        
-        VStack {
-            Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-            Button("This is a test", systemImage: "testtube.2") {
-                showText = true
-            }
-            
-            if showText {
-                Text("Hoi Fabian")
-                    .font(.largeTitle)
-            }
-        }
+        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
     }
 }
 
