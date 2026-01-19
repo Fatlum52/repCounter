@@ -8,8 +8,38 @@
 import SwiftUI
 
 struct LibraryView: View {
+    
+    @State private var showExerciseSheet: Bool = false
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        
+        VStack {
+            Button("Exercises") {
+                showExerciseSheet = true
+            }
+            
+            Button("Training Sessions") {
+                
+            }
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.orange)
+        .font(.title3)
+        .sheet(isPresented: $showExerciseSheet) {
+            ExerciseSheetTemplateView(
+                templates: [
+                    .init("Bench Press"),
+                    .init("Squat"),
+                    .init("Deadlift"),
+                    .init("Pull Ups"),
+                    .init("Shoulder Press"),
+                    .init("Pushup"),
+                    .init("Pullup")
+                ], onSelect: { _ in
+                    // nothing
+                }
+            )
+        }
     }
 }
 
