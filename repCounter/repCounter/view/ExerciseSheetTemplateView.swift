@@ -2,24 +2,37 @@ import SwiftUI
 
 struct ExerciseSheetTemplateView: View {
     
-    @State private var showText:Bool = false
+    let templates: [ExerciseTemplate]
+    let onSelect: (ExerciseTemplate) -> Void
+    
+    @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        
-        VStack {
-            Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-            Button("This is a test", systemImage: "testtube.2") {
-                showText = true
+        ScrollView {
+            VStack {
+                ForEach(templates) { template in
+                    Button {
+                        onSelect(template)
+                        dismiss()
+                    } label: {
+                        CardStyle {
+                            
+                            Text(template.name)
+                                .font(.headline)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            
-            if showText {
-                Text("Hoi Fabian")
-                    .font(.largeTitle)
+            .padding()
+        }
+        .navigationTitle("Exercise Templates")
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
             }
         }
     }
-}
-
-#Preview {
-    ExerciseSheetTemplateView()
 }
