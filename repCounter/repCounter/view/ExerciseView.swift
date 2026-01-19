@@ -16,6 +16,7 @@ struct ExerciseView: View {
     @State private var isEditorPresented: Bool = false
     @State private var editingExercise: Exercise? = nil
     @State private var draftName: String = ""
+    @State private var showTemplates: Bool = false
     @FocusState private var isNewExerciseFocused: Bool
 
     var body: some View {
@@ -39,6 +40,9 @@ struct ExerciseView: View {
                         )
                     )
                 }
+            }
+            .sheet(isPresented: $showTemplates) {
+                
             }
     }
     
@@ -76,9 +80,24 @@ struct ExerciseView: View {
                     .padding(.horizontal, 8)
             }
 #else
-            AddButtonCircle(title: "Add Exercise") {
-                isAddingExercise.toggle()
+            
+            Menu("Add Exercise", systemImage: "plus.circle") {
+                
+                Button("New Exercise") {
+                    isAddingExercise.toggle()
+                }
+                
+                Button("From Library") {
+                    showTemplates = true
+                }
             }
+            .buttonStyle(.borderedProminent)
+            .tint(.green)
+            .foregroundStyle(.white)
+            
+            //AddButtonCircle(title: "Add Exercise") {
+            //    isAddingExercise.toggle()
+            //}
 
             if isAddingExercise {
                 addExerciseTextField
