@@ -2,23 +2,29 @@ import SwiftUI
 
 struct InlineAddField: View {
     
-    @State private var menuName:String = ""
-    @State private var buttonName:String = ""
-    @State private var textFieldPlaceholder:String = ""
-    @State private var name:String = ""
-    @State private var isAdding = false
-    @FocusState private var isFieldFocused: Bool
+    // config
+    let menuTitle:String
+    let actionTitle:String
+    let placeholder:String
     
-    var onDissmissAdding: () -> Void
-    var onAdd: () -> Void
+    // data
+    @Binding var text:String
+    
+    // UI-State
+    @State private var isAdding = false
+    @FocusState private var isFocused: Bool
+    
+    // actions
+    var onAdd: (String) -> Void
+    var onCancel: () -> Void
     
     
     var body: some View {
         
-        Menu(menuName, systemImage: "plus.circle") {
+        Menu(menuTitle, systemImage: "plus.circle") {
             
-            Button(buttonName) {
-                isAdding.toggle()
+            Button(actionTitle) {
+                isAdding = true
             }
             
             Button("From Library") {
@@ -31,16 +37,18 @@ struct InlineAddField: View {
         
         if isAdding {
             HStack {
-                TextField(textFieldPlaceholder, text: $name)
-                    .onSubmit(handleAdd)
+                TextField(placeholder, text: $text)
+                    .onSubmit {
+                        handleAdd()
+                    }
                     .padding(15)
                     .textFieldStyle(.roundedBorder)
                     .font(.title3)
-                    .focused($isFieldFocused)
-                    .onAppear { isFieldFocused = true }
+                    .focused($isFocused)
+                    .onAppear { isFocused = true }
                 
                 Button("Cancel", systemImage: "x.circle") {
-                    handleDissmissAdding()
+                    handleCancel()
                 }
                 .labelStyle(.iconOnly)
                 .foregroundStyle(.secondary)
@@ -48,17 +56,27 @@ struct InlineAddField: View {
             }
             .padding(.horizontal)
         }
-        
-        
-        
     }
     
-    private func handleDissmissAdding() {
-        onDissmissAdding()
-    }
+    // MARK: - helper functions
     
     private func handleAdd() {
-        onAdd()
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        
+        onAdd(trimmed)
+        reset()
+    }
+    
+    private func handleCancel() {
+        reset()
+        onCancel()
+    }
+    
+    private func reset() {
+        isFocused = false
+        isAdding = false
+        text = ""
     }
 }
 
