@@ -4,13 +4,11 @@ import SwiftData
 struct TrainingSessionView: View {
     
     // MARK: - Environment & Data
-    
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \TrainingSession.date, order: .reverse)
     private var trainingList: [TrainingSession]
     
     // MARK: - Add / Edit State
-    
     @State private var newSessionName = ""
     @State private var isEditorPresented = false
     @State private var editingSession: TrainingSession?
@@ -18,12 +16,10 @@ struct TrainingSessionView: View {
     @State private var showTemplates: Bool = false
     
     // MARK: - Selection State
-    
     @State private var selectedSession: TrainingSession?
     @State private var selectedExercise: Exercise?
     
     // MARK: - Body
-    
     var body: some View {
 #if os(macOS)
         NavigationSplitView {
@@ -59,7 +55,6 @@ struct TrainingSessionView: View {
     }
     
     // MARK: - Session List Content (Root)
-    
     private var sessionListContent: some View {
         VStack(spacing: 0) {
             addButtonSection
@@ -90,7 +85,6 @@ struct TrainingSessionView: View {
     }
     
     // MARK: - Add Button Section with Textfield
-    
     private var addButtonSection: some View {
         VStack {
             InlineAddField(
@@ -108,7 +102,6 @@ struct TrainingSessionView: View {
     }
     
     // MARK: - Sessions List
-    
     private var sessionsList: some View {
 #if os(macOS)
         // macOS: Simple List in Sidebar
@@ -187,7 +180,6 @@ struct TrainingSessionView: View {
     }
     
     // MARK: - Empty State
-    
     private var emptyStateView: some View {
         Text("No trainings yet")
             .foregroundStyle(.secondary)
