@@ -16,8 +16,8 @@ struct InlineAddField: View {
     
     // actions
     var onAdd: (String) -> Void
-    var onCancel: () -> Void
     let onSelectFromLibrary: () -> Void
+    var onCancel: () -> Void
     
     
     var body: some View {
