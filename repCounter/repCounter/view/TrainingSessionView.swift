@@ -19,6 +19,9 @@ struct TrainingSessionView: View {
     @State private var selectedSession: TrainingSession?
     @State private var selectedExercise: Exercise?
     
+    // MARK: - Templates Query
+    @Query private var userTemplates: [SessionTemplate]
+    
     // MARK: - Body
     var body: some View {
 #if os(macOS)
@@ -81,6 +84,11 @@ struct TrainingSessionView: View {
             )
         }
         .sheet(isPresented: $showTemplates) {
+            TemplateSheetView(
+                templates: allTemplates,
+                title: "Session Templates",
+                onSelect: addSession(named:)
+            )
         }
     }
     
@@ -186,8 +194,14 @@ struct TrainingSessionView: View {
             .padding(.top, 3)
     }
     
+    // MARK: - Templates
+    private var allTemplates: [String] {
+        // User-Templates
+        let testTemplateName = "Push/Pull"  // Just the name as String
+        return [testTemplateName] + userTemplates.map { $0.name }
+    }
+    
     // MARK: - Helper Functions
-
     private func addSession(named name: String) {
         let finalName = name.isEmpty ? "Training Session" : name
         let newTraining = TrainingSession(name: finalName)
