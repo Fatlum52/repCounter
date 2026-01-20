@@ -14,6 +14,7 @@ struct repCounterApp: App {
         let schema = Schema([
             TrainingSession.self,
             Exercise.self,
+            ExerciseTemplate.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
