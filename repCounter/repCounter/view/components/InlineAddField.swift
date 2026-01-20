@@ -17,6 +17,7 @@ struct InlineAddField: View {
     // actions
     var onAdd: (String) -> Void
     var onCancel: () -> Void
+    let onSelectFromLibrary: () -> Void
     
     
     var body: some View {
@@ -28,7 +29,7 @@ struct InlineAddField: View {
             }
             
             Button("From Library") {
-                //showTemplates = true
+                onSelectFromLibrary()
             }
         }
         .buttonStyle(.borderedProminent)
