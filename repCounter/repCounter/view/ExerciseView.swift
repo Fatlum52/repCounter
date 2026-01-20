@@ -46,7 +46,12 @@ struct ExerciseView: View {
                 }
             }
             .sheet(isPresented: $showTemplates) {
-                // templates view
+                ExerciseSheetTemplateView(
+                    templates: ExerciseTemplateStore.shared.templates,
+                    onSelect: { template in
+                        addExercise(named: template.name)
+                    }
+                )
             }
     }
     
@@ -75,6 +80,9 @@ struct ExerciseView: View {
             placeholder: "Name of the exercise",
             text: $newExerciseName,
             onAdd: addExercise,
+            onSelectFromLibrary: {
+                showTemplates = true
+            },
             onCancel: { }
         )
     }
@@ -153,7 +161,7 @@ struct ExerciseView: View {
             .padding(.top, 3)
     }
     
-    // MARK: - Actions
+    // MARK: - Helper functions
     
     private func addExercise(named name: String) {
         let finalName = name.trimmingCharacters(in: .whitespacesAndNewlines)
