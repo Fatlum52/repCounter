@@ -86,12 +86,6 @@ struct TrainingSessionView: View {
             )
         }
         .sheet(isPresented: $showTemplates) {
-            ExerciseSheetTemplateView(
-                templates: ExerciseTemplateStore.shared.templates,
-                onSelect: { template in
-                    addSession(named: template.name)
-                }
-            )
         }
     }
     

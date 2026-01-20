@@ -46,7 +46,6 @@ struct ExerciseView: View {
                 }
             }
             .sheet(isPresented: $showTemplates) {
-                // ExerciseSheetTemplateView
                 TemplateSheetView(
                     templates: allTemplates,  // Defaults + User
                     title: "Exercise Templates",
