@@ -11,9 +11,7 @@ struct TrainingSessionView: View {
     
     // MARK: - Add / Edit State
     
-    @State private var isAddingSession = false
     @State private var newSessionName = ""
-    @FocusState private var isEditFieldFocused: Bool
     @State private var isEditorPresented = false
     @State private var editingSession: TrainingSession?
     @State private var editingName = ""
@@ -92,60 +90,15 @@ struct TrainingSessionView: View {
     
     private var addButtonSection: some View {
         VStack {
-#if os(macOS)
-            AddButtonCircle(title: "Add Training Session") {
-                isAddingSession.toggle()
-            }
-            .padding(.top, 8)
-            .padding(.bottom, 20)
-            .padding(.horizontal, 8)
-            
-            if isAddingSession {
-                addSessionTextField
-                    .padding(.horizontal, 8)
-            }
-#else
-            Menu("Add Training Session", systemImage: "plus.circle") {
-                
-                Button("New Training Session") {
-                    isAddingSession.toggle()
-                }
-                
-                Button("From Library") {
-                    //showTemplates = true
-                }
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.green)
-            .foregroundStyle(.white)
-            
-            if isAddingSession {
-                HStack {
-                    addSessionTextField
-                    
-                    Button("Cancel", systemImage: "x.circle") {
-                        dismissAddSession()
-                    }
-                    .labelStyle(.iconOnly)
-                    .foregroundStyle(.secondary)
-                    .padding(.trailing)
-                }
-                .padding(.horizontal)
-            }
-#endif
+            InlineAddField(
+                menuTitle: "Add Session",
+                actionTitle: "New Session",
+                placeholder: "Name of your Training Session",
+                text: $newSessionName,
+                onAdd: addSession,
+                onCancel: { newSessionName = "" }
+            )
         }
-    }
-    
-    // MARK: - Add Session TextField
-    
-    private var addSessionTextField: some View {
-        TextField("Add Training", text: $newSessionName)
-            .onSubmit(addSession)
-            .padding(15)
-            .textFieldStyle(.roundedBorder)
-            .font(.title3)
-            .focused($isEditFieldFocused)
-            .onAppear { isEditFieldFocused = true }
     }
     
     // MARK: - Sessions List
@@ -237,14 +190,12 @@ struct TrainingSessionView: View {
     
     // MARK: - Helper Functions
 
-    private func addSession() {
-        let name = newSessionName.isEmpty ? "Training Session" : newSessionName
-        let newTraining = TrainingSession(name: name)
+    private func addSession(named name: String) {
+        let finalName = name.isEmpty ? "Training Session" : name
+        let newTraining = TrainingSession(name: finalName)
         modelContext.insert(newTraining)
-
-        newSessionName = ""
-        isAddingSession = false
     }
+
 
     private func deleteSession(_ session: TrainingSession) {
         // Delete all media files for the exercises
@@ -269,13 +220,5 @@ struct TrainingSessionView: View {
         }
         session.name = editingName
         cancelEdit()
-    }
-    
-    private func dismissAddSession() {
-        guard isAddingSession else { return }
-        isEditFieldFocused = false
-        isAddingSession = false
-        newSessionName = ""
-        
     }
 }
