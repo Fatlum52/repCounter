@@ -4,7 +4,6 @@ import SwiftData
 struct ExerciseView: View {
     
     // MARK: - Data & Environment
-    
     @Bindable var trainingSession: TrainingSession
     @Environment(\.modelContext) private var modelContext
     
@@ -15,14 +14,15 @@ struct ExerciseView: View {
 #endif
     
     // MARK: - State
-    
     @State private var newExerciseName: String = ""
     @State private var isEditorPresented: Bool = false
     @State private var editingExercise: Exercise? = nil
     @State private var showTemplates: Bool = false
     
-    // MARK: - Body
+    // MARK: - Templates Query
+    @Query private var userTemplates: [ExerciseTemplate]
     
+    // MARK: - Body
     var body: some View {
         exerciseListContent
 #if os(iOS)
@@ -46,17 +46,16 @@ struct ExerciseView: View {
                 }
             }
             .sheet(isPresented: $showTemplates) {
-                ExerciseSheetTemplateView(
-                    templates: ExerciseTemplateStore.shared.templates,
-                    onSelect: { template in
-                        addExercise(named: template.name)
-                    }
+                // ExerciseSheetTemplateView
+                TemplateSheetView(
+                    templates: allTemplates,  // Defaults + User
+                    title: "Exercise Templates",
+                    onSelect: { name in addExercise(named: name) }
                 )
             }
     }
     
     // MARK: - Exercise List Content
-    
     private var exerciseListContent: some View {
         VStack(spacing: 0) {
             addButtonSection
@@ -72,7 +71,6 @@ struct ExerciseView: View {
     }
     
     // MARK: - Add Button Section with Textfield
-    
     private var addButtonSection: some View {
         InlineAddField(
             menuTitle: "Add Exercise",
@@ -88,7 +86,6 @@ struct ExerciseView: View {
     }
     
     // MARK: - Exercises List
-    
     private var exercisesList: some View {
 #if os(macOS)
         List(selection: $selectedExercise) {
@@ -122,7 +119,6 @@ struct ExerciseView: View {
     }
     
     // MARK: - Exercise Row (macOS)
-    
     @ViewBuilder
     private func exerciseRow(for exercise: Exercise) -> some View {
         HStack {
@@ -136,7 +132,6 @@ struct ExerciseView: View {
     }
     
     // MARK: - Context Menu
-    
     @ViewBuilder
     private func exerciseContextMenu(for exercise: Exercise) -> some View {
         Button {
@@ -154,15 +149,21 @@ struct ExerciseView: View {
     }
     
     // MARK: - Empty State
-    
     private var emptyStateView: some View {
         Text("No exercises yet")
             .foregroundStyle(.secondary)
             .padding(.top, 3)
     }
     
-    // MARK: - Helper functions
+    // MARK: - Templates
+    private var allTemplates: [String] {
+        // Defaults (hardcoded) + User-Templates (aus SwiftData)
+        let defaults = ExerciseTemplateStore.defaultTemplateNames
+        let userNames = userTemplates.map { $0.name }
+        return defaults + userNames
+    }
     
+    // MARK: - Helper functions
     private func addExercise(named name: String) {
         let finalName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !finalName.isEmpty else { return }
@@ -189,7 +190,6 @@ struct ExerciseView: View {
 }
 
 // MARK: - Preview
-
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: TrainingSession.self, Exercise.self, configurations: config)
