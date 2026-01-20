@@ -1,36 +1,33 @@
 import Foundation
+import SwiftData
 
 final class ExerciseTemplateStore {
 
     static let shared = ExerciseTemplateStore()
+    private init() {}
 
-    private(set) var templates: [ExerciseTemplate]
-
-    private init() {
-        self.templates = Self.defaultTemplates
+    func addTemplate(name: String, in context: ModelContext) {
+        let template = ExerciseTemplate(name)
+        context.insert(template)
     }
 
-    func addTemplate(name: String) {
-        templates.append(ExerciseTemplate(name))
+    func removeTemplate(_ template: ExerciseTemplate, in context: ModelContext) {
+        context.delete(template)
     }
 
-    func removeTemplate(id: UUID) {
-        templates.removeAll { $0.id == id }
-    }
-
-    // MARK: - Defaults
-
-    private static let defaultTemplates: [ExerciseTemplate] = [
-        .init("Pushup"),
-        .init("Pullup"),
-        .init("Chinup"),
-        .init("Dip"),
-        .init("Muscle Up"),
-        .init("Bench Press"),
-        .init("Squat"),
-        .init("Deadlift"),
-        .init("Shoulder Press"),
-        .init("Pike Pushup"),
-        .init("Bicep Curl")
+    // MARK: - Defaults (hardcoded, nicht in SwiftData)
+    
+    static let defaultTemplateNames: [String] = [
+        "Pushup",
+        "Pullup",
+        "Chinup",
+        "Dip",
+        "Muscle Up",
+        "Bench Press",
+        "Squat",
+        "Deadlift",
+        "Shoulder Press",
+        "Pike Pushup",
+        "Bicep Curl"
     ]
 }
