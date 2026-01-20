@@ -1,25 +1,21 @@
 import Foundation
+import SwiftData
 
 final class SessionTemplateStore {
 
     static let shared = SessionTemplateStore()
-
-    private(set) var templates: [SessionTemplate] = []
-
     private init() {}
-
+    
     func addTemplate(
         name: String,
-        exerciseNames: [String]
+        exercises: [String],
+        in context: ModelContext
     ) {
-        let template = SessionTemplate(
-            name: name,
-            exerciseNames: exerciseNames
-        )
-        templates.append(template)
+        let template = SessionTemplate(name: name, exerciseNames: exercises)
+        context.insert(template)
     }
 
-    func removeTemplate(id: UUID) {
-        templates.removeAll { $0.id == id }
+    func removeTemplate(_ template: SessionTemplate, in context: ModelContext) {
+        context.delete(template)
     }
 }
