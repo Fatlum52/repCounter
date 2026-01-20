@@ -15,6 +15,7 @@ struct TrainingSessionView: View {
     @State private var isEditorPresented = false
     @State private var editingSession: TrainingSession?
     @State private var editingName = ""
+    @State private var showTemplates: Bool = false
     
     // MARK: - Selection State
     
@@ -84,6 +85,14 @@ struct TrainingSessionView: View {
                 name: $editingName
             )
         }
+        .sheet(isPresented: $showTemplates) {
+            ExerciseSheetTemplateView(
+                templates: ExerciseTemplateStore.shared.templates,
+                onSelect: { template in
+                    addSession(named: template.name)
+                }
+            )
+        }
     }
     
     // MARK: - Add Button Section with Textfield
@@ -96,6 +105,9 @@ struct TrainingSessionView: View {
                 placeholder: "Name of your Training Session",
                 text: $newSessionName,
                 onAdd: addSession,
+                onSelectFromLibrary: {
+                    showTemplates = true
+                },
                 onCancel: { newSessionName = "" }
             )
         }
