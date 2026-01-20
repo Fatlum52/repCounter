@@ -15,6 +15,7 @@ struct repCounterApp: App {
             TrainingSession.self,
             Exercise.self,
             ExerciseTemplate.self,
+            SessionTemplate.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

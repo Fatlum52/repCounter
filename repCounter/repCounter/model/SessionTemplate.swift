@@ -1,9 +1,11 @@
 import Foundation
+import SwiftData
 
+@Model
 final class SessionTemplate: Identifiable {
-    let id: UUID = UUID()
-    let name: String
-    let exerciseNames: [String]
+    var id: UUID = UUID()
+    var name: String
+    var exerciseNames: [String]
     
     init(name: String, exerciseNames: [String]) {
         self.name = name
