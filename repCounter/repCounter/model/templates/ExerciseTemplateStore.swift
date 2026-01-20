@@ -15,7 +15,7 @@ final class ExerciseTemplateStore {
         context.delete(template)
     }
 
-    // MARK: - Defaults (hardcoded, nicht in SwiftData)
+    // MARK: - Defaults (hardcoded, not in SwiftData)
     
     static let defaultTemplateNames: [String] = [
         "Pushup",
