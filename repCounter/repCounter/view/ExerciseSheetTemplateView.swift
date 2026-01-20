@@ -16,7 +16,6 @@ struct ExerciseSheetTemplateView: View {
                         dismiss()
                     } label: {
                         CardStyle {
-                            
                             Text(template.name)
                                 .font(.headline)
                         }
