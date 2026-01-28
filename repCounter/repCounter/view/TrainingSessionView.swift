@@ -59,20 +59,25 @@ struct TrainingSessionView: View {
     
     // MARK: - Session List Content (Root)
     private var sessionListContent: some View {
-        VStack(spacing: 0) {
-            addButtonSection
+        ZStack {
+            Background()
             
-            if !trainingList.isEmpty {
-                sessionsList
-            } else {
-                emptyStateView
+            VStack(spacing: 0) {
+                addButtonSection
+                
+                if !trainingList.isEmpty {
+                    sessionsList
+                } else {
+                    emptyStateView
+                }
+                
+                Spacer()
             }
-            
-            Spacer()
         }
 #if os(iOS)
         .navigationTitle("Training Sessions")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
 #endif
         .overlay {
             NameEditOverlay(
@@ -184,6 +189,8 @@ struct TrainingSessionView: View {
             }
             .padding()
         }
+        .background(Color.clear)
+        .scrollContentBackground(.hidden)
 #endif
     }
     

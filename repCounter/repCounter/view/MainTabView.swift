@@ -10,16 +10,23 @@ import SwiftUI
 struct MainTabView: View {
     
     var body: some View {
-        TabView {
+        ZStack {
+            Background()
             
-            Tab("Workouts", systemImage: "figure.run") {
-                TrainingSessionView()
-            }
-            
-            Tab("Library", systemImage: "building.columns.fill") {
-                LibraryView()
+            TabView {
+                
+                Tab("Workouts", systemImage: "figure.run") {
+                    TrainingSessionView()
+                }
+                
+                Tab("Library", systemImage: "building.columns.fill") {
+                    LibraryView()
+                }
             }
         }
+#if os(iOS)
+        .toolbarBackground(.hidden, for: .tabBar)
+#endif
     }
 }
 

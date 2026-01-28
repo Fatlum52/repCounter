@@ -27,18 +27,22 @@ struct LibraryView: View {
     
     // MARK: - Body
     var body: some View {
-        VStack {
-            Button("Exercises") {
-                showExerciseSheet = true
-            }
+        ZStack {
+            Background()
             
-            Button("Training Sessions") {
-                showSessionSheet = true
+            VStack {
+                Button("Exercises") {
+                    showExerciseSheet = true
+                }
+                
+                Button("Training Sessions") {
+                    showSessionSheet = true
+                }
             }
+            .buttonStyle(.borderedProminent)
+            .tint(.orange)
+            .font(.title3)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(.orange)
-        .font(.title3)
         .sheet(isPresented: $showExerciseSheet) {
             NavigationStack {
                 TemplateSheetView(

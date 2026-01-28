@@ -44,14 +44,17 @@ struct ExerciseDetailView: View {
     @State private var showNotesSheet: Bool = false
     
     var body: some View {
-        VStack {
+        ZStack {
+            Background()
+            
+            VStack {
 #if os(macOS)
-            // macOS: Add padding at top
-            Spacer()
-                .frame(height: 8)
+                // macOS: Add padding at top
+                Spacer()
+                    .frame(height: 8)
 #endif
-            // Set Card
-            CardSet(
+                // Set Card
+                CardSet(
                 exercise: exercise,
                 focusedSetID: $focusedSetID,
                 onAddSet: {
@@ -103,7 +106,7 @@ struct ExerciseDetailView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
             }
-            
+            }
         }
         .navigationTitle(exercise.name)
 #if os(iOS)
@@ -177,6 +180,7 @@ struct ExerciseDetailView: View {
             )
         }
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()

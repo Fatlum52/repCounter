@@ -28,6 +28,7 @@ struct ExerciseView: View {
 #if os(iOS)
             .navigationTitle(trainingSession.name)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
 #else
             .navigationTitle(trainingSession.name + " - " + trainingSession.formattedDate)
 #endif
@@ -56,16 +57,20 @@ struct ExerciseView: View {
     
     // MARK: - Exercise List Content
     private var exerciseListContent: some View {
-        VStack(spacing: 0) {
-            addButtonSection
+        ZStack {
+            Background()
             
-            if !trainingSession.exercises.isEmpty {
-                exercisesList
-            } else {
-                emptyStateView
+            VStack(spacing: 0) {
+                addButtonSection
+                
+                if !trainingSession.exercises.isEmpty {
+                    exercisesList
+                } else {
+                    emptyStateView
+                }
+                
+                Spacer()
             }
-            
-            Spacer()
         }
     }
     
@@ -114,6 +119,8 @@ struct ExerciseView: View {
             }
             .padding()
         }
+        .background(Color.clear)
+        .scrollContentBackground(.hidden)
 #endif
     }
     
