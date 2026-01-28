@@ -27,83 +27,91 @@ struct CardSet: View {
             // Sets List
             ScrollViewReader { proxy in
                 List {
-                    Section {
-                        let rows = Array(exercise.sets.enumerated())
-                        ForEach(rows, id: \.element.id) { index, set in
-                            let displayNumber = index + 1
-                            
-                            HStack {
-                                Text("\(displayNumber). Set")
-                                    .font(.title3)
-                                Spacer()
-                                TextField(
-                                    "0",
-                                    value: repsBinding(set.id),
-                                    format: .number
-                                )
-#if os(iOS)
-                                .keyboardType(.numberPad)
-                                .focused($focusedSetID, equals: set.id)
-#endif
-                                .multilineTextAlignment(.trailing)
-                                .frame(width: 80)
-                                .font(.title3)
-                                Text("reps")
-                                    .font(.body)
-                                    .foregroundStyle(.secondary)
-                            }
-                            .padding(.vertical, 12)
-                            .id(set.id)
-#if os(iOS)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button(role: .destructive) {
-                                    onDeleteSet(set.id)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
-#elseif os(macOS)
-                            .contextMenu {
-                                Button(role: .destructive) {
-                                    onDeleteSet(set.id)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
-#endif
-                            .listRowSeparator(.visible, edges: .bottom)
-                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-                            .listRowBackground(Color.clear)
-                        }
-                    } footer: {
-                        // Add Set Button - always scroll to bottom after adding a new set
+                    let rows = Array(exercise.sets.enumerated())
+                    
+                    ForEach(rows, id: \.element.id) { index, set in
+                        let displayNumber = index + 1
+                        
                         HStack {
+                            Text("\(displayNumber). Set")
+                                .font(.title3)
+                            
                             Spacer()
-                            AddButtonCircle(
-                                title: "add Set",
-                                onAdd: {
-                                    if let newSetID = onAddSet() {
+                            
+                            TextField(
+                                "0",
+                                value: repsBinding(set.id),
+                                format: .number
+                            )
 #if os(iOS)
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                            focusedSetID = newSetID
-                                            withAnimation {
-                                                proxy
-                                                    .scrollTo("addSetButton", anchor: .center)
-                                            }
-                                        }
+                            .keyboardType(.numberPad)
+                            .focused($focusedSetID, equals: set.id)
 #endif
-                                    }
-                                })
-                            Spacer()
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                            .font(.title3)
+                            
+                            Text("reps")
+                                .font(.body)
+                                .foregroundStyle(.secondary)
                         }
-                        .padding(.horizontal)
-                        .id("addSetButton")
+                        .padding(.vertical, 12)
+                        .id(set.id)
+#if os(iOS)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                onDeleteSet(set.id)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+#elseif os(macOS)
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                onDeleteSet(set.id)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+#endif
+                        .listRowSeparator(.visible, edges: .bottom)
+                        .listRowInsets(
+                            EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+                        )
+                        .listRowBackground(Color.clear)
                     }
-                    .listSectionSeparator(.hidden, edges: [.top, .bottom])
+                    
+                    // ➕ Add Set Button als normale Row
+                    HStack {
+                        Spacer()
+                        AddButtonCircle(
+                            title: "add Set",
+                            onAdd: {
+                                if let newSetID = onAddSet() {
+#if os(iOS)
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                                        focusedSetID = newSetID
+                                        withAnimation {
+                                            proxy.scrollTo(newSetID, anchor: .center)
+                                        }
+                                    }
+#endif
+                                }
+                            }
+                        )
+                        Spacer()
+                    }
+                    .padding(.vertical, 12)
+                    .listRowInsets(
+                        EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+                    )
+                    .listRowBackground(Color.clear)
+                    .id("addSetButton")
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
             }
+            
         }
         .background(.regularMaterial)
         .cornerRadius(12)
