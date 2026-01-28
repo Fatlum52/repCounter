@@ -81,7 +81,7 @@ struct CardSet: View {
                         .listRowBackground(Color.clear)
                     }
                     
-                    // ➕ Add Set Button als normale Row
+                    // ➕ Add Set Button as normale Row
                     HStack {
                         Spacer()
                         AddButtonCircle(
@@ -102,6 +102,7 @@ struct CardSet: View {
                         Spacer()
                     }
                     .padding(.vertical, 12)
+                    .listRowSeparator(.hidden)
                     .listRowInsets(
                         EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
                     )
