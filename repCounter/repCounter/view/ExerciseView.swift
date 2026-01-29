@@ -22,6 +22,11 @@ struct ExerciseView: View {
     // MARK: - Templates Query
     @Query private var userTemplates: [ExerciseTemplate]
     
+    // MARK: - Computed Properties
+    private var sortedExercises: [Exercise] {
+        trainingSession.exercises.sorted(by: { $0.order > $1.order })
+    }
+    
     // MARK: - Body
     var body: some View {
         exerciseListContent
@@ -97,7 +102,7 @@ struct ExerciseView: View {
     private var exercisesList: some View {
 #if os(macOS)
         List(selection: $selectedExercise) {
-            ForEach(trainingSession.exercises) { exercise in
+            ForEach(sortedExercises) { exercise in
                 exerciseRow(for: exercise)
                     .tag(exercise)
                     .contextMenu {
@@ -109,7 +114,7 @@ struct ExerciseView: View {
         .scrollContentBackground(.hidden)
 #else
         List {
-            ForEach(trainingSession.exercises) { exercise in
+            ForEach(sortedExercises) { exercise in
                 NavigationLink {
                     ExerciseDetailView(exercise: exercise)
                 } label: {
@@ -184,6 +189,7 @@ struct ExerciseView: View {
         guard !finalName.isEmpty else { return }
         
         let newExercise = Exercise(finalName)
+        newExercise.order = trainingSession.exercises.count  // Set order based on current count
         modelContext.insert(newExercise)
         trainingSession.exercises.append(newExercise)
     }
