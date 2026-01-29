@@ -58,6 +58,7 @@ struct TemplateSheetView: View {
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
                 .listRowBackground(Color.clear)
+                #if os(iOS)
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     if allowsEditing {
                         Button("Delete", systemImage: "trash", role: .destructive) {
@@ -70,6 +71,19 @@ struct TemplateSheetView: View {
                         .tint(.blue)
                     }
                 }
+                #elseif os(macOS)
+                .contextMenu {
+                    if allowsEditing {
+                        Button("Edit", systemImage: "pencil") {
+                            editTemplate(item.template)
+                        }
+                        
+                        Button("Delete", systemImage: "trash", role: .destructive) {
+                            deleteTemplate(item.template)
+                        }
+                    }
+                }
+                #endif
             }
         }
         .listStyle(.plain)
@@ -81,6 +95,9 @@ struct TemplateSheetView: View {
                 Button("Cancel") { dismiss() }
             }
         }
+#if os(macOS)
+        .frame(minWidth: 500, minHeight: 300)
+#endif
         .overlay {
             if templateType == .exercise {
                 NameEditOverlay(
