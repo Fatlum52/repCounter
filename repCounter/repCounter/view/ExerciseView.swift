@@ -50,7 +50,6 @@ struct ExerciseView: View {
                 NavigationStack {
                     TemplateSheetView(
                         templateType: .exercise,
-                        defaultNames: ExerciseTemplateStore.defaultTemplateNames,
                         userTemplates: userTemplates.map { $0 as Any },
                         title: "Exercise Templates",
                         onSelect: { name in addExercise(named: name) },

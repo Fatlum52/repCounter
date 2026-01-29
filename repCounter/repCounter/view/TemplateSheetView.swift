@@ -9,8 +9,7 @@ enum TemplateType {
 struct TemplateSheetView: View {
     
     let templateType: TemplateType
-    let defaultNames: [String]  // For exercise templates (defaults)
-    let userTemplates: [Any]  // ExerciseTemplate or SessionTemplate
+    let userTemplates: [Any]  // ExerciseTemplate or SessionTemplate (includes defaults now)
     let title: String
     let onSelect: (String) -> Void
     let allowsEditing: Bool  // Whether templates can be edited/deleted (only true in LibraryView)
@@ -25,28 +24,17 @@ struct TemplateSheetView: View {
     @State private var editingSessionTemplate: SessionTemplate?
     @State private var editingName: String = ""
     @State private var editingExerciseNames: [String] = []
-    @State private var editingDefaultName: String? = nil  // Track if editing a default template
-    @State private var deletedDefaultNames: Set<String> = []  // Track deleted default templates
     
     // MARK: - Computed Properties
-    private var allTemplates: [(name: String, isDefault: Bool, template: Any?)] {
-        var result: [(name: String, isDefault: Bool, template: Any?)] = []
+    private var allTemplates: [(name: String, template: Any)] {
+        var result: [(name: String, template: Any)] = []
         
-        // Add defaults first (only for exercises), excluding deleted ones
-        if templateType == .exercise {
-            for defaultName in defaultNames {
-                if !deletedDefaultNames.contains(defaultName) {
-                    result.append((name: defaultName, isDefault: true, template: nil))
-                }
-            }
-        }
-        
-        // Add user templates
+        // All templates are now in SwiftData (including defaults)
         for template in userTemplates {
             if let exerciseTemplate = template as? ExerciseTemplate {
-                result.append((name: exerciseTemplate.name, isDefault: false, template: exerciseTemplate))
+                result.append((name: exerciseTemplate.name, template: exerciseTemplate))
             } else if let sessionTemplate = template as? SessionTemplate {
-                result.append((name: sessionTemplate.name, isDefault: false, template: sessionTemplate))
+                result.append((name: sessionTemplate.name, template: sessionTemplate))
             }
         }
         
@@ -73,11 +61,11 @@ struct TemplateSheetView: View {
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     if allowsEditing {
                         Button("Delete", systemImage: "trash", role: .destructive) {
-                            deleteTemplate(item.template, defaultName: item.isDefault ? item.name : nil)
+                            deleteTemplate(item.template)
                         }
                         
                         Button("Edit", systemImage: "pencil") {
-                            editTemplate(item.template, defaultName: item.isDefault ? item.name : nil)
+                            editTemplate(item.template)
                         }
                         .tint(.blue)
                     }
@@ -100,7 +88,6 @@ struct TemplateSheetView: View {
                     onCancel: {
                         showNameEditOverlay = false
                         editingExerciseTemplate = nil
-                        editingDefaultName = nil
                     },
                     onSave: {
                         saveExerciseEdit()
@@ -185,84 +172,43 @@ struct TemplateSheetView: View {
     }
     
     // MARK: - Helper Functions
-    private func editTemplate(_ template: Any?, defaultName: String?) {
-        if let defaultName = defaultName {
-            // Editing a default template
-            editingDefaultName = defaultName
-            editingName = defaultName
-            editingExerciseTemplate = nil
-            editingSessionTemplate = nil
-            
-            if templateType == .exercise {
-                // Use NameEditOverlay for exercise templates
-                showNameEditOverlay = true
-            } else {
-                // Use sheet for session templates (needs exercises management)
-                editingExerciseNames = []
-                showEditSheet = true
-            }
-        } else if let template = template {
-            // Editing an existing user template
-            if let exerciseTemplate = template as? ExerciseTemplate {
-                editingExerciseTemplate = exerciseTemplate
-                editingName = exerciseTemplate.name
-                editingDefaultName = nil
-                showNameEditOverlay = true
-            } else if let sessionTemplate = template as? SessionTemplate {
-                editingSessionTemplate = sessionTemplate
-                editingName = sessionTemplate.name
-                editingExerciseNames = sessionTemplate.exerciseNames
-                editingDefaultName = nil
-                showEditSheet = true
-            }
+    private func editTemplate(_ template: Any) {
+        if let exerciseTemplate = template as? ExerciseTemplate {
+            editingExerciseTemplate = exerciseTemplate
+            editingName = exerciseTemplate.name
+            showNameEditOverlay = true
+        } else if let sessionTemplate = template as? SessionTemplate {
+            editingSessionTemplate = sessionTemplate
+            editingName = sessionTemplate.name
+            editingExerciseNames = sessionTemplate.exerciseNames
+            showEditSheet = true
         }
     }
     
     private func saveExerciseEdit() {
-        if let defaultName = editingDefaultName {
-            // Saving a default template as a new user template
-            ExerciseTemplateStore.shared.addTemplate(name: editingName, in: modelContext)
-            // Hide the original default
-            deletedDefaultNames.insert(defaultName)
-            editingDefaultName = nil
-        } else if let exerciseTemplate = editingExerciseTemplate {
-            // Updating existing user template
+        if let exerciseTemplate = editingExerciseTemplate {
+            // Update existing template directly in SwiftData
             exerciseTemplate.name = editingName
         }
         showNameEditOverlay = false
     }
     
     private func saveEdit() {
-        // This is only called for session templates now
-        if let defaultName = editingDefaultName {
-            // Saving a default template as a new user template
-            SessionTemplateStore.shared.addTemplate(
-                name: editingName,
-                exercises: editingExerciseNames.filter { !$0.isEmpty },
-                in: modelContext
-            )
-            // Hide the original default
-            deletedDefaultNames.insert(defaultName)
-            editingDefaultName = nil
-        } else if let sessionTemplate = editingSessionTemplate {
-            // Updating existing user template
+        // This is only called for session templates
+        if let sessionTemplate = editingSessionTemplate {
+            // Update existing template directly in SwiftData
             sessionTemplate.name = editingName
             sessionTemplate.exerciseNames = editingExerciseNames.filter { !$0.isEmpty }
         }
         showEditSheet = false
     }
     
-    private func deleteTemplate(_ template: Any?, defaultName: String?) {
-        if let defaultName = defaultName {
-            // Deleting a default template - just hide it from the list
-            deletedDefaultNames.insert(defaultName)
-        } else if let template = template {
-            // Deleting a user template from SwiftData
-            if let exerciseTemplate = template as? ExerciseTemplate {
-                ExerciseTemplateStore.shared.removeTemplate(exerciseTemplate, in: modelContext)
-            } else if let sessionTemplate = template as? SessionTemplate {
-                SessionTemplateStore.shared.removeTemplate(sessionTemplate, in: modelContext)
-            }
+    private func deleteTemplate(_ template: Any) {
+        // Delete template directly from SwiftData
+        if let exerciseTemplate = template as? ExerciseTemplate {
+            ExerciseTemplateStore.shared.removeTemplate(exerciseTemplate, in: modelContext)
+        } else if let sessionTemplate = template as? SessionTemplate {
+            SessionTemplateStore.shared.removeTemplate(sessionTemplate, in: modelContext)
         }
     }
 }

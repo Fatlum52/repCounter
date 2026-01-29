@@ -92,7 +92,6 @@ struct TrainingSessionView: View {
             NavigationStack {
                 TemplateSheetView(
                     templateType: .session,
-                    defaultNames: [],
                     userTemplates: userTemplates.map { $0 as Any },
                     title: "Session Templates",
                     onSelect: addSession(named:),
