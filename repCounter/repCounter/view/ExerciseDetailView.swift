@@ -33,10 +33,6 @@ struct ExerciseDetailView: View {
 #if os(iOS)
     @State private var selectedItem: PhotosPickerItem? // holds the selected Photo item
     @State private var showPhotoLibrary: Bool = false // control photo library picker visibility
-    @State private var selectedImage: UIImage? // holds the loaded image (for camera)
-    @State private var selectedVideoURL: URL? // holds the video URL (for camera)
-    @State private var showingCamera: Bool = false // control camera sheet visibility
-    @State private var cameraMode: CameraMode = .photo
 #elseif os(macOS)
     @State private var showFilePicker: Bool = false
 #endif
@@ -84,14 +80,6 @@ struct ExerciseDetailView: View {
                     Button("Select Media", systemImage: "photo.badge.plus") {
                         showPhotoLibrary = true
                     }
-                    Button("Take Photo", systemImage: "camera") {
-                        cameraMode = .photo
-                        showingCamera = true
-                    }
-                    Button("Record Video", systemImage: "video") {
-                        cameraMode = .video
-                        showingCamera = true
-                    }
 #elseif os(macOS)
                     Button("Select Media", systemImage: "photo.badge.plus") {
                         showFilePicker = true
@@ -120,14 +108,10 @@ struct ExerciseDetailView: View {
             guard let newItem else { return }
             
             Task {
-                // Reset previous selection
-                selectedImage = nil
-                selectedVideoURL = nil
-                
                 // Try to load as image first
                 if let data = try? await newItem.loadTransferable(type: Data.self),
                    let image = UIImage(data: data) {
-                    // Save image to documents
+                    // Save a copy of the image to documents
                     let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
                     if FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
                         await MainActor.run {
@@ -140,6 +124,7 @@ struct ExerciseDetailView: View {
                 
                 // Try to load as video
                 if let videoData = try? await newItem.loadTransferable(type: Movie.self) {
+                    // Save a copy of the video to documents
                     let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).mp4"
                     if let savedURL = await FileManagerHelper.saveVideoToDocuments(videoURL: videoData.url, fileName: fileName) {
                         await MainActor.run {
@@ -164,23 +149,6 @@ struct ExerciseDetailView: View {
             NotesSheetView(notes: $exercise.notes)
         }
 #if os(iOS)
-        .fullScreenCover(isPresented: $showingCamera) {
-            CameraView(
-                image: $selectedImage,
-                videoURL: $selectedVideoURL,
-                mode: cameraMode,
-                onImageCaptured: { image in
-                    saveCameraImage(image)
-                    selectedImage = nil // Reset after saving
-                },
-                onVideoCaptured: { videoURL in
-                    saveCameraVideo(videoURL)
-                    selectedVideoURL = nil // Reset after saving
-                }
-            )
-            // Force a new UIImagePickerController when switching between photo/video
-            .id(cameraMode)
-        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar {
@@ -226,28 +194,6 @@ struct ExerciseDetailView: View {
         copy.removeAll { $0.id == id }
         exercise.sets = copy
     }
-    
-#if os(iOS)
-    private func saveCameraImage(_ image: UIImage) {
-        Task { @MainActor in
-            let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
-            if FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
-                let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .image)
-                exercise.mediaItems.append(mediaItem)
-            }
-        }
-    }
-    
-    private func saveCameraVideo(_ videoURL: URL) {
-        Task { @MainActor in
-            let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).mp4"
-            if let savedURL = await FileManagerHelper.saveVideoToDocuments(videoURL: videoURL, fileName: fileName) {
-                let mediaItem = Exercise.MediaItem(fileName: savedURL.lastPathComponent, fileType: .video)
-                exercise.mediaItems.append(mediaItem)
-            }
-        }
-    }
-#endif
     
 #if os(macOS)
     private func selectImageFromFile() {

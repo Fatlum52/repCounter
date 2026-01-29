@@ -53,9 +53,10 @@ struct LibraryView: View {
             }
         }
         .sheet(isPresented: $showSessionSheet) {
-            // TODO: Session
-            Text("Session Templates - Coming Soon")
-            TemplateSheetView(templates: allSessionTemplates, title: "Session Templates", onSelect: { name in })
+            TemplateSheetView(
+                templates: allSessionTemplates,
+                title: "Session Templates",
+                onSelect: { name in })
         }
     }
 }
