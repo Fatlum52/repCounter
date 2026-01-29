@@ -119,7 +119,7 @@ struct ExerciseView: View {
                     }
                 }
             }
-            .padding()
+            .padding(.vertical, 16)  // Only vertical padding, horizontal is handled by CardStyle
         }
         .background(Color.clear)
         .scrollContentBackground(.hidden)

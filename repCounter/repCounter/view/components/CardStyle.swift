@@ -9,14 +9,8 @@ struct CardStyle<Content: View>: View {
     
     var body: some View {
         content
-#if os(iOS)
             .frame(maxWidth: .infinity)
-            .frame(width: UIScreen.main.bounds.width * 0.9)
-#else
-            // macOS: fill available width, let parent control size
-            .frame(maxWidth: .infinity)
-#endif
-            .padding()
+            .padding()  // Internal padding for content
             .background(.regularMaterial)
             .cornerRadius(12)
             .overlay(
@@ -24,17 +18,22 @@ struct CardStyle<Content: View>: View {
                     .stroke(Color.gray.opacity(0.3), lineWidth: 1.5)
             )
             .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+            .padding(.horizontal, 16)  // External padding/margin - consistent everywhere
     }
 }
 
 #Preview {
-    CardStyle {
-        VStack(alignment: .leading) {
-            Text("Card Title")
-                .font(.headline)
-            Text("Card Content")
-                .foregroundStyle(.secondary)
+    ScrollView {
+        VStack(spacing: 16) {
+            CardStyle {
+                VStack(alignment: .leading) {
+                    Text("Card Title")
+                        .font(.headline)
+                    Text("Card Content")
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
+        .padding(.vertical, 16)
     }
-    .padding()
 }

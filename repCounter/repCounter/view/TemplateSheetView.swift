@@ -11,7 +11,7 @@ struct TemplateSheetView: View {
     var body: some View {
         
         ScrollView {
-            VStack {
+            VStack(spacing: 12) {
                 ForEach(templates, id: \.self) { name in
                     Button {
                         onSelect(name)
@@ -25,7 +25,7 @@ struct TemplateSheetView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding()
+            .padding(.vertical, 16)  // Only vertical padding, horizontal is handled by CardStyle
         }
         .navigationTitle(title)
         .toolbar {
