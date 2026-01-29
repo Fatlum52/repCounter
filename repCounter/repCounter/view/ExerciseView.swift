@@ -106,23 +106,32 @@ struct ExerciseView: View {
         .listStyle(.sidebar)
         .scrollContentBackground(.hidden)
 #else
-        ScrollView {
-            VStack(spacing: 16) {
-                ForEach(trainingSession.exercises) { exercise in
-                    NavigationLink {
-                        ExerciseDetailView(exercise: exercise)
-                    } label: {
-                        ExerciseCard(exercise: exercise)
-                    }
-                    .contextMenu {
-                        exerciseContextMenu(for: exercise)
-                    }
+        List {
+            ForEach(trainingSession.exercises) { exercise in
+                NavigationLink {
+                    ExerciseDetailView(exercise: exercise)
+                } label: {
+                    ExerciseCard(exercise: exercise)
                 }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button("Delete", systemImage: "trash", role: .destructive) {
+                        deleteExercise(exercise)
+                    }
+                    
+                    Button("Edit", systemImage: "pencil") {
+                        editingExercise = exercise
+                        isEditorPresented = true
+                    }
+                    .tint(.blue)
+                }
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                .listRowBackground(Color.clear)
             }
-            .padding(.vertical, 16)  // Only vertical padding, horizontal is handled by CardStyle
         }
-        .background(Color.clear)
+        .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .background(Color.clear)
 #endif
     }
     
@@ -142,17 +151,13 @@ struct ExerciseView: View {
     // MARK: - Context Menu
     @ViewBuilder
     private func exerciseContextMenu(for exercise: Exercise) -> some View {
-        Button {
+        Button("Edit", systemImage: "pencil") {
             editingExercise = exercise
             isEditorPresented = true
-        } label: {
-            Label("Edit", systemImage: "pencil")
         }
         
-        Button(role: .destructive) {
+        Button("Delete", systemImage: "trash", role: .destructive) {
             deleteExercise(exercise)
-        } label: {
-            Label("Delete", systemImage: "trash")
         }
     }
     

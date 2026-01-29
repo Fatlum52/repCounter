@@ -163,36 +163,34 @@ struct TrainingSessionView: View {
         .listStyle(.sidebar)
         .scrollContentBackground(.hidden)
 #else
-        // iOS: Cards in ScrollView
-        ScrollView {
-            VStack(spacing: 16) {
-                ForEach(trainingList) { training in
-                    NavigationLink {
-                        ExerciseView(trainingSession: training)
-                    } label: {
-                        TrainingSessionCard(trainingSession: training)
-                    }
-                    .contextMenu {
-                        Button {
-                            editingSession = training
-                            editingName = training.name
-                            isEditorPresented = true
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-                        
-                        Button(role: .destructive) {
-                            deleteSession(training)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
+        // iOS: Cards in List with Swipe Actions
+        List {
+            ForEach(trainingList) { training in
+                NavigationLink {
+                    ExerciseView(trainingSession: training)
+                } label: {
+                    TrainingSessionCard(trainingSession: training)
                 }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button("Delete", systemImage: "trash", role: .destructive) {
+                        deleteSession(training)
+                    }
+                    
+                    Button("Edit", systemImage: "pencil") {
+                        editingSession = training
+                        editingName = training.name
+                        isEditorPresented = true
+                    }
+                    .tint(.blue)
+                }
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                .listRowBackground(Color.clear)
             }
-            .padding(.vertical, 16)  // Only vertical padding, horizontal is handled by CardStyle
         }
-        .background(Color.clear)
+        .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .background(Color.clear)
 #endif
     }
     
