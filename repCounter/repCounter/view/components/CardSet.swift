@@ -135,7 +135,7 @@ struct CardSet: View {
         let maxHeight: CGFloat = 400
 #elseif os(macOS)
         let headerHeight: CGFloat = 30
-        let addButtonHeight: CGFloat = 40
+        let addButtonHeight: CGFloat = 53
         let setRowHeight: CGFloat = 50
         let maxHeight: CGFloat = 300
 #endif
