@@ -164,7 +164,7 @@ struct ExerciseDetailView: View {
             NotesSheetView(notes: $exercise.notes)
         }
 #if os(iOS)
-        .sheet(isPresented: $showingCamera) {
+        .fullScreenCover(isPresented: $showingCamera) {
             CameraView(
                 image: $selectedImage,
                 videoURL: $selectedVideoURL,
@@ -178,6 +178,8 @@ struct ExerciseDetailView: View {
                     selectedVideoURL = nil // Reset after saving
                 }
             )
+            // Force a new UIImagePickerController when switching between photo/video
+            .id(cameraMode)
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.hidden, for: .navigationBar)
