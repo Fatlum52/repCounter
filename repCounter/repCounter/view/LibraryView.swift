@@ -31,6 +31,7 @@ struct LibraryView: View {
             .tint(.orange)
             .font(.title3)
         }
+        .toolbarBackground(.hidden)
         .sheet(isPresented: $showExerciseSheet) {
             NavigationStack {
                 TemplateSheetView(

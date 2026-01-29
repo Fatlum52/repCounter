@@ -25,30 +25,35 @@ struct TrainingSessionView: View {
     // MARK: - Body
     var body: some View {
 #if os(macOS)
-        NavigationSplitView {
-            // Sidebar: Sessions
-            sessionListContent
-                .navigationSplitViewColumnWidth(min: 250, ideal: 300, max: 350)
-        } content: {
-            // Content: Exercises
-            if let session = selectedSession ?? trainingList.first {
-                ExerciseView(
-                    trainingSession: session,
-                    selectedExercise: $selectedExercise
-                )
-            } else {
-                Text("Select a training session")
-                    .foregroundStyle(.secondary)
-            }
-        } detail: {
-            // Detail: ExerciseDetailView
-            if let exercise = selectedExercise {
-                ExerciseDetailView(exercise: exercise)
-            } else {
-                Text("Select an exercise")
-                    .foregroundStyle(.secondary)
+        ZStack {
+            Background()
+            
+            NavigationSplitView {
+                // Sidebar: Sessions
+                sessionListContent
+                    .navigationSplitViewColumnWidth(min: 250, ideal: 300, max: 350)
+            } content: {
+                // Content: Exercises
+                if let session = selectedSession ?? trainingList.first {
+                    ExerciseView(
+                        trainingSession: session,
+                        selectedExercise: $selectedExercise
+                    )
+                } else {
+                    Text("Select a training session")
+                        .foregroundStyle(.secondary)
+                }
+            } detail: {
+                // Detail: ExerciseDetailView
+                if let exercise = selectedExercise {
+                    ExerciseDetailView(exercise: exercise)
+                } else {
+                    Text("Select an exercise")
+                        .foregroundStyle(.secondary)
+                }
             }
         }
+        .toolbarBackground(.hidden, for: .windowToolbar)
 #else
         // iOS: Simple NavigationStack
         NavigationStack {
