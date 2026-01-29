@@ -5,7 +5,8 @@ import SwiftData
 final class Exercise: Identifiable {
     var id: UUID = UUID()
     var name: String
-    var sets: [ExerciseSet] = [] // „richtige“ Sets (als eingebettete Werttypen gespeichert)
+    var order: Int = 0  // Order within the training session
+    var sets: [ExerciseSet] = []
     var notes: String = ""
     var mediaItems: [MediaItem] = [] // images or videos within exercise
     
