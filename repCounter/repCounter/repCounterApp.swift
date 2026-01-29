@@ -20,7 +20,23 @@ struct repCounterApp: App {
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            
+            // Initialize default exercise templates ONLY on first app launch
+            let context = container.mainContext
+            let descriptor = FetchDescriptor<ExerciseTemplate>()
+            let existingTemplates = try? context.fetch(descriptor)
+            
+            // If NO templates exist at all → First launch → Create defaults
+            // If templates exist → Already initialized → Do nothing
+            if existingTemplates?.isEmpty == true {
+                for defaultName in ExerciseTemplateStore.defaultTemplateNames.reversed() {
+                    ExerciseTemplateStore.shared.addTemplate(name: defaultName, in: context)
+                }
+                try context.save()
+            }
+            
+            return container
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
