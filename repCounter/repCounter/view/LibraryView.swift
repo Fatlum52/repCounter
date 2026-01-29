@@ -46,18 +46,24 @@ struct LibraryView: View {
         .sheet(isPresented: $showExerciseSheet) {
             NavigationStack {
                 TemplateSheetView(
-                    templates: allExerciseTemplates,
+                    templateType: .exercise,
+                    defaultNames: ExerciseTemplateStore.defaultTemplateNames,
+                    userTemplates: exerciseTemplates.map { $0 as Any },
                     title: "Exercise Templates",
-                    onSelect: { name in }
+                    onSelect: { name in },
+                    allowsEditing: true
                 )
             }
         }
         .sheet(isPresented: $showSessionSheet) {
             NavigationStack {
                 TemplateSheetView(
-                    templates: allSessionTemplates,
+                    templateType: .session,
+                    defaultNames: [],
+                    userTemplates: sessionTemplates.map { $0 as Any },
                     title: "Session Templates",
-                    onSelect: { name in }
+                    onSelect: { name in },
+                    allowsEditing: true
                 )
             }
         }

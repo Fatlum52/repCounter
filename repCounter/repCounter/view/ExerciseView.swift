@@ -49,9 +49,12 @@ struct ExerciseView: View {
             .sheet(isPresented: $showTemplates) {
                 NavigationStack {
                     TemplateSheetView(
-                        templates: allTemplates,  // Defaults + User
+                        templateType: .exercise,
+                        defaultNames: ExerciseTemplateStore.defaultTemplateNames,
+                        userTemplates: userTemplates.map { $0 as Any },
                         title: "Exercise Templates",
-                        onSelect: { name in addExercise(named: name) }
+                        onSelect: { name in addExercise(named: name) },
+                        allowsEditing: false
                     )
                 }
             }

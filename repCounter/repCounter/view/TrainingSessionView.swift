@@ -91,9 +91,12 @@ struct TrainingSessionView: View {
         .sheet(isPresented: $showTemplates) {
             NavigationStack {
                 TemplateSheetView(
-                    templates: allTemplates,
+                    templateType: .session,
+                    defaultNames: [],
+                    userTemplates: userTemplates.map { $0 as Any },
                     title: "Session Templates",
-                    onSelect: addSession(named:)
+                    onSelect: addSession(named:),
+                    allowsEditing: false
                 )
             }
         }
@@ -199,13 +202,6 @@ struct TrainingSessionView: View {
         Text("No trainings yet")
             .foregroundStyle(.secondary)
             .padding(.top, 3)
-    }
-    
-    // MARK: - Templates
-    private var allTemplates: [String] {
-        // User-Templates
-        let testTemplateName = "Push/Pull"  // Just the name as String
-        return [testTemplateName] + userTemplates.map { $0.name }
     }
     
     // MARK: - Helper Functions
