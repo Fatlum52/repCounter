@@ -47,11 +47,13 @@ struct ExerciseView: View {
                 }
             }
             .sheet(isPresented: $showTemplates) {
-                TemplateSheetView(
-                    templates: allTemplates,  // Defaults + User
-                    title: "Exercise Templates",
-                    onSelect: { name in addExercise(named: name) }
-                )
+                NavigationStack {
+                    TemplateSheetView(
+                        templates: allTemplates,  // Defaults + User
+                        title: "Exercise Templates",
+                        onSelect: { name in addExercise(named: name) }
+                    )
+                }
             }
     }
     

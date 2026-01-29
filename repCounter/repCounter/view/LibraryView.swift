@@ -53,10 +53,13 @@ struct LibraryView: View {
             }
         }
         .sheet(isPresented: $showSessionSheet) {
-            TemplateSheetView(
-                templates: allSessionTemplates,
-                title: "Session Templates",
-                onSelect: { name in })
+            NavigationStack {
+                TemplateSheetView(
+                    templates: allSessionTemplates,
+                    title: "Session Templates",
+                    onSelect: { name in }
+                )
+            }
         }
     }
 }

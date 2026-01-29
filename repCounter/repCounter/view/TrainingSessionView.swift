@@ -89,11 +89,13 @@ struct TrainingSessionView: View {
             )
         }
         .sheet(isPresented: $showTemplates) {
-            TemplateSheetView(
-                templates: allTemplates,
-                title: "Session Templates",
-                onSelect: addSession(named:)
-            )
+            NavigationStack {
+                TemplateSheetView(
+                    templates: allTemplates,
+                    title: "Session Templates",
+                    onSelect: addSession(named:)
+                )
+            }
         }
     }
     
