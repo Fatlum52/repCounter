@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 
 struct TrainingSessionCard: View {
+    
     let trainingSession: TrainingSession
     
     var body: some View {
@@ -20,21 +21,23 @@ struct TrainingSessionCard: View {
                 
                 // Exercises List
                 if !trainingSession.exercises.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(trainingSession.exercises) { exercise in
-                            HStack {
-                                Text(exercise.name)
-                                    .font(.body)
-                                Spacer()
-                                Text("\(exercise.totalReps) Reps")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                    VStack(alignment: .leading) {
+                        ForEach(Array(trainingSession.exercises.sorted(by: { $0.order > $1.order }).enumerated()), id: \.element.id) { index, exercise in
+                            VStack(alignment: .leading) {
+                                HStack {
+                                    Text(exercise.name)
+                                        .font(.body)
+                                    Spacer()
+                                    Text("\(exercise.totalReps) Reps")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                }
+                                
+                                if index < trainingSession.exercises.count - 1 {
+                                    Divider()
+                                }
                             }
-                            .padding(.vertical, 4)
-                            
-                            if exercise.id != trainingSession.exercises.last?.id {
-                                Divider()
-                            }
+                            .padding(4)
                         }
                     }
                     .padding(.top, 4)
