@@ -34,24 +34,12 @@ struct LibraryView: View {
         .toolbarBackground(.hidden)
         .sheet(isPresented: $showExerciseSheet) {
             NavigationStack {
-                TemplateSheetView(
-                    templateType: .exercise,
-                    userTemplates: exerciseTemplates.map { $0 as Any },
-                    title: "Exercise Templates",
-                    onSelect: { name in },
-                    allowsEditing: true
-                )
+                ExerciseTemplatesView()
             }
         }
         .sheet(isPresented: $showSessionSheet) {
             NavigationStack {
-                TemplateSheetView(
-                    templateType: .session,
-                    userTemplates: sessionTemplates.map { $0 as Any },
-                    title: "Session Templates",
-                    onSelect: { name in },
-                    allowsEditing: true
-                )
+                SessionTemplatesView()
             }
         }
     }
