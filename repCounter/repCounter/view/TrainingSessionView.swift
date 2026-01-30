@@ -96,11 +96,9 @@ struct TrainingSessionView: View {
         .sheet(isPresented: $showTemplates) {
             NavigationStack {
                 TemplateSheetView(
-                    templateType: .session,
-                    userTemplates: userTemplates.map { $0 as Any },
+                    templates: userTemplates.map { $0.name },
                     title: "Session Templates",
-                    onSelect: addSession(named:),
-                    allowsEditing: false
+                    onSelect: addSession(named:)
                 )
             }
         }
@@ -211,8 +209,25 @@ struct TrainingSessionView: View {
     // MARK: - Helper Functions
     private func addSession(named name: String) {
         let finalName = name.isEmpty ? "Training Session" : name
-        let newTraining = TrainingSession(name: finalName)
-        modelContext.insert(newTraining)
+        
+        // Find the SessionTemplate by name
+        if let template = userTemplates.first(where: { $0.name == name }) {
+            // Create session from template with exercises
+            let newTraining = TrainingSession(name: finalName)
+            modelContext.insert(newTraining)
+            
+            // Create exercises from template
+            for exerciseName in template.exerciseNames {
+                let newExercise = Exercise(exerciseName)
+                newExercise.order = newTraining.exercises.count
+                modelContext.insert(newExercise)
+                newTraining.exercises.append(newExercise)
+            }
+        } else {
+            // Create session without template (manual creation)
+            let newTraining = TrainingSession(name: finalName)
+            modelContext.insert(newTraining)
+        }
     }
 
 
