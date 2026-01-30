@@ -16,25 +16,37 @@ struct InlineAddField: View {
     
     // actions
     var onAdd: (String) -> Void
-    let onSelectFromLibrary: () -> Void
+    var onSelectFromLibrary: (() -> Void)? = nil
     var onCancel: () -> Void
     
     
     var body: some View {
         
-        Menu(menuTitle, systemImage: "plus.circle") {
-            
-            Button(actionTitle) {
+        // If no library option, show direct button instead of menu
+        if onSelectFromLibrary == nil {
+            Button(menuTitle, systemImage: "plus.circle") {
                 isAdding = true
             }
-            
-            Button("From Library") {
-                onSelectFromLibrary()
+            .buttonStyle(.borderedProminent)
+            .tint(.green)
+            .foregroundStyle(.white)
+        } else {
+            Menu(menuTitle, systemImage: "plus.circle") {
+                
+                Button(actionTitle) {
+                    isAdding = true
+                }
+                
+                if let onSelectFromLibrary = onSelectFromLibrary {
+                    Button("From Library") {
+                        onSelectFromLibrary()
+                    }
+                }
             }
+            .buttonStyle(.borderedProminent)
+            .tint(.green)
+            .foregroundStyle(.white)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(.green)
-        .foregroundStyle(.white)
         
         if isAdding {
             HStack {
