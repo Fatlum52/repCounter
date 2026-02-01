@@ -258,8 +258,17 @@ struct SessionTemplatesView: View {
                     }
                     .buttonStyle(.bordered)
                     
-                    Button("Add from Templates", systemImage: "list.bullet") {
+                    Button {
                         showExerciseTemplatePicker = true
+                    } label: {
+                        HStack(alignment: .center, spacing: 8) {
+                            Image(systemName: "list.bullet")
+                                .frame(width: 20, alignment: .center)
+
+                            Text("Add from Templates")
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                     .buttonStyle(.bordered)
                 }
