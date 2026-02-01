@@ -26,10 +26,16 @@ struct Movie: Transferable {
 }
 #endif
 
+enum SetFocusField: Hashable {
+    case weight(UUID)
+    case reps(UUID)
+}
+
 struct ExerciseDetailView: View {
     
     @Bindable var exercise: Exercise
-    @FocusState private var focusedSetID: Exercise.ExerciseSet.ID?
+    @FocusState private var focusedField: SetFocusField?
+    
 #if os(iOS)
     @State private var selectedItem: PhotosPickerItem? // holds the selected Photo item
     @State private var showPhotoLibrary: Bool = false // control photo library picker visibility
@@ -52,10 +58,8 @@ struct ExerciseDetailView: View {
                 // Set Card
                 CardSet(
                 exercise: exercise,
-                focusedSetID: $focusedSetID,
-                onAddSet: {
-                    addSet()
-                },
+                focusedField: $focusedField,
+                onAddSet: { addSet() },
                 onDeleteSet: { id in
                     deleteSet(id: id)
                 },
@@ -157,7 +161,7 @@ struct ExerciseDetailView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button("Fertig") { focusedSetID = nil }
+                Button("Fertig") { focusedField = nil }
                     .padding(.trailing, 8)
             }
         }
