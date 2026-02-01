@@ -61,6 +61,9 @@ struct ExerciseDetailView: View {
                 },
                 repsBinding: { id in
                     repsBinding(for: id)
+                },
+                weightBinding: { id in
+                    weightBinding(for: id)
                 }
             )
             .padding(.horizontal)
@@ -173,6 +176,20 @@ struct ExerciseDetailView: View {
                 guard let idx = exercise.sets.firstIndex(where: { $0.id == id }) else { return }
                 var copy = exercise.sets
                 copy[idx].reps = newValue
+                exercise.sets = copy
+            }
+        )
+    }
+    
+    private func weightBinding(for id: Exercise.ExerciseSet.ID) -> Binding<Int> {
+        Binding(
+            get: {
+                exercise.sets.first(where: { $0.id == id })?.weight ?? 0
+            },
+            set: { newValue in
+                guard let idx = exercise.sets.firstIndex(where: { $0.id == id }) else { return }
+                var copy = exercise.sets
+                copy[idx].weight = newValue
                 exercise.sets = copy
             }
         )
