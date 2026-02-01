@@ -4,13 +4,14 @@ import SwiftData
 struct CardSet: View {
     
     @Bindable var exercise: Exercise
-    @FocusState.Binding var focusedSetID: Exercise.ExerciseSet.ID?
+    @FocusState.Binding var focusedField: SetFocusField?
     var onAddSet: () -> Exercise.ExerciseSet.ID?
     var onDeleteSet: (Exercise.ExerciseSet.ID) -> Void
     var repsBinding: (Exercise.ExerciseSet.ID) -> Binding<Int>
     var weightBinding: (Exercise.ExerciseSet.ID) -> Binding<Int>
     
     var body: some View {
+        
         VStack(spacing: 0) {
             // Header Row
             HStack {
@@ -35,45 +36,42 @@ struct CardSet: View {
                         
                         // One Row in the SetCard
                         HStack {
-                            // Set Number
+                            // Links
                             Text("\(displayNumber). Set")
                                 .font(.title3)
-                            
-                            // weight with kg label
-                            TextField(
-                                "0",
-                                value: weightBinding(set.id),
-                                format: .number
-                            )
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                            .font(.title3)
-#if os(iOS)
-                            .keyboardType(.numberPad)
-#endif
-                            Text("kg")
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                            
-                            Spacer()
-                            
-                            // rep count with reps label
-                            TextField(
-                                "0",
-                                value: repsBinding(set.id),
-                                format: .number
-                            )
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                            .font(.title3)
-#if os(iOS)
-                            .keyboardType(.numberPad)
-                            .focused($focusedSetID, equals: set.id)
-#endif
-                            
-                            Text("reps")
-                                .font(.body)
-                                .foregroundStyle(.secondary)
+                                .frame(width: 90, alignment: .leading)
+
+                            // Mitte: Gewicht
+                            HStack(spacing: 6) {
+                                TextField("0", value: weightBinding(set.id), format: .number)
+                        #if os(iOS)
+                                    .keyboardType(.numberPad)
+                                    .focused($focusedField, equals: .weight(set.id))
+                        #endif
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(width: 50)
+                                    .font(.title3)
+
+                                Text("kg")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .center)
+
+                            // Rechts: Reps
+                            HStack(spacing: 6) {
+                                TextField("0", value: repsBinding(set.id), format: .number)
+                        #if os(iOS)
+                                    .keyboardType(.numberPad)
+                                    .focused($focusedField, equals: .reps(set.id))
+                        #endif
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(width: 50)
+                                    .font(.title3)
+
+                                Text("reps")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(width: 110, alignment: .trailing)
                         }
                         .padding(.vertical, 12)
                         .id(set.id)
@@ -110,7 +108,7 @@ struct CardSet: View {
                                 if let newSetID = onAddSet() {
 #if os(iOS)
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                                        focusedSetID = newSetID
+                                        focusedField = .reps(newSetID)   // or .weight(newSetID)
                                         withAnimation {
                                             proxy.scrollTo(newSetID, anchor: .center)
                                         }
