@@ -174,7 +174,7 @@ struct TrainingSessionView: View {
                 NavigationLink {
                     ExerciseView(trainingSession: training)
                 } label: {
-                    TrainingSessionCard(trainingSession: training)
+                    SessionCard(trainingSession: training)
                 }
                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                     Button("Delete", systemImage: "trash", role: .destructive) {
