@@ -18,6 +18,7 @@ final class Exercise: Identifiable {
         var id: UUID = UUID()
         var name: String
         var reps: Int = 0
+        var weight: Int = 0
         
         init(_ name: String) {
             self.name = name

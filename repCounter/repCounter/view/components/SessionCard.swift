@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-struct TrainingSessionCard: View {
+struct SessionCard: View {
     
     let trainingSession: TrainingSession
     
@@ -73,7 +73,7 @@ struct TrainingSessionCard: View {
     
     return ScrollView {
         VStack(spacing: 16) {
-            TrainingSessionCard(trainingSession: session)
+            SessionCard(trainingSession: session)
         }
         .padding()
     }
