@@ -8,6 +8,7 @@ struct CardSet: View {
     var onAddSet: () -> Exercise.ExerciseSet.ID?
     var onDeleteSet: (Exercise.ExerciseSet.ID) -> Void
     var repsBinding: (Exercise.ExerciseSet.ID) -> Binding<Int>
+    var weightBinding: (Exercise.ExerciseSet.ID) -> Binding<Int>
     
     var body: some View {
         VStack(spacing: 0) {
@@ -32,24 +33,43 @@ struct CardSet: View {
                     ForEach(rows, id: \.element.id) { index, set in
                         let displayNumber = index + 1
                         
+                        // One Row in the SetCard
                         HStack {
+                            // Set Number
                             Text("\(displayNumber). Set")
                                 .font(.title3)
                             
+                            // weight with kg label
+                            TextField(
+                                "0",
+                                value: weightBinding(set.id),
+                                format: .number
+                            )
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                            .font(.title3)
+#if os(iOS)
+                            .keyboardType(.numberPad)
+#endif
+                            Text("kg")
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                            
                             Spacer()
                             
+                            // rep count with reps label
                             TextField(
                                 "0",
                                 value: repsBinding(set.id),
                                 format: .number
                             )
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 80)
+                            .font(.title3)
 #if os(iOS)
                             .keyboardType(.numberPad)
                             .focused($focusedSetID, equals: set.id)
 #endif
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 80)
-                            .font(.title3)
                             
                             Text("reps")
                                 .font(.body)
@@ -81,7 +101,7 @@ struct CardSet: View {
                         .listRowBackground(Color.clear)
                     }
                     
-                    // ➕ Add Set Button as normale Row
+                    // ➕ Add Set Button as normal Row
                     HStack {
                         Spacer()
                         AddButtonCircle(
@@ -142,59 +162,5 @@ struct CardSet: View {
         
         let totalHeight = headerHeight + addButtonHeight + (CGFloat(exercise.sets.count) * setRowHeight)
         return min(totalHeight, maxHeight)
-    }
-}
-
-// MARK: - Preview
-
-#Preview {
-    PreviewWrapper()
-}
-
-struct PreviewWrapper: View {
-    @FocusState private var focusedSetID: Exercise.ExerciseSet.ID?
-    @State private var exercise: Exercise = {
-        let ex = Exercise("Pullup")
-        var set1 = Exercise.ExerciseSet("Set 1")
-        set1.reps = 10
-        var set2 = Exercise.ExerciseSet("Set 2")
-        set2.reps = 12
-        ex.sets = [set1, set2] // Set 1 oben, Set 2 darunter
-        return ex
-    }()
-    
-    var body: some View {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try! ModelContainer(for: Exercise.self, configurations: config)
-        
-        CardSet(
-            exercise: exercise,
-            focusedSetID: $focusedSetID,
-            onAddSet: {
-                let newSet = Exercise.ExerciseSet("Set \(exercise.sets.count + 1)")
-                var copy = exercise.sets
-                copy.append(newSet)
-                exercise.sets = copy
-                return newSet.id
-            },
-            onDeleteSet: { id in
-                var copy = exercise.sets
-                copy.removeAll { $0.id == id }
-                exercise.sets = copy
-            },
-            repsBinding: { id in
-                Binding(
-                    get: { exercise.sets.first(where: { $0.id == id })?.reps ?? 0 },
-                    set: { newValue in
-                        guard let idx = exercise.sets.firstIndex(where: { $0.id == id }) else { return }
-                        var copy = exercise.sets
-                        copy[idx].reps = newValue
-                        exercise.sets = copy
-                    }
-                )
-            }
-        )
-        .modelContainer(container)
-        .padding()
     }
 }
