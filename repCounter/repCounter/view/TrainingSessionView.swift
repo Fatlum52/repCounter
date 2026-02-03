@@ -5,18 +5,18 @@ struct TrainingSessionView: View {
     
     // MARK: - Environment & Data
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \TrainingSession.date, order: .reverse)
-    private var trainingList: [TrainingSession]
+    @Query(sort: \Session.date, order: .reverse)
+    private var trainingList: [Session]
     
     // MARK: - Add / Edit State
     @State private var newSessionName = ""
     @State private var isEditorPresented = false
-    @State private var editingSession: TrainingSession?
+    @State private var editingSession: Session?
     @State private var editingName = ""
     @State private var showTemplates: Bool = false
     
     // MARK: - Selection State
-    @State private var selectedSession: TrainingSession?
+    @State private var selectedSession: Session?
     @State private var selectedExercise: Exercise?
     
     // MARK: - Templates Query
@@ -213,7 +213,7 @@ struct TrainingSessionView: View {
         // Find the SessionTemplate by name
         if let template = userTemplates.first(where: { $0.name == name }) {
             // Create session from template with exercises
-            let newTraining = TrainingSession(name: finalName)
+            let newTraining = Session(name: finalName)
             modelContext.insert(newTraining)
             
             // Create exercises from template
@@ -225,13 +225,13 @@ struct TrainingSessionView: View {
             }
         } else {
             // Create session without template (manual creation)
-            let newTraining = TrainingSession(name: finalName)
+            let newTraining = Session(name: finalName)
             modelContext.insert(newTraining)
         }
     }
 
 
-    private func deleteSession(_ session: TrainingSession) {
+    private func deleteSession(_ session: Session) {
         // Delete all media files for the exercises
         FileManagerHelper.deleteMediaFiles(for: session)
         

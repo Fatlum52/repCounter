@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class TrainingSession: Identifiable {
+final class Session: Identifiable {
     var id           = UUID()
     var date         = Date()
     var name: String = "Training vom "

@@ -4,7 +4,7 @@ import SwiftData
 struct ExerciseView: View {
     
     // MARK: - Data & Environment
-    @Bindable var trainingSession: TrainingSession
+    @Bindable var trainingSession: Session
     @Environment(\.modelContext) private var modelContext
     
 #if os(macOS)
@@ -211,9 +211,9 @@ struct ExerciseView: View {
 // MARK: - Preview
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: TrainingSession.self, Exercise.self, configurations: config)
+    let container = try! ModelContainer(for: Session.self, Exercise.self, configurations: config)
     
-    let session = TrainingSession(name: "Push Day")
+    let session = Session(name: "Push Day")
     let exercise = Exercise("Bench Press")
     session.exercises.append(exercise)
     

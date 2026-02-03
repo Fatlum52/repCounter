@@ -12,7 +12,7 @@ import SwiftData
 struct repCounterApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            TrainingSession.self,
+            Session.self,
             Exercise.self,
             ExerciseTemplate.self,
             SessionTemplate.self

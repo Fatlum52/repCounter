@@ -3,7 +3,7 @@ import SwiftData
 
 struct SessionCard: View {
     
-    let trainingSession: TrainingSession
+    let trainingSession: Session
     
     var body: some View {
         CardStyle {
@@ -54,9 +54,9 @@ struct SessionCard: View {
 
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: TrainingSession.self, Exercise.self, configurations: config)
+    let container = try! ModelContainer(for: Session.self, Exercise.self, configurations: config)
     
-    let session = TrainingSession(name: "Push Day")
+    let session = Session(name: "Push Day")
     let exercise1 = Exercise("Bench Press")
     exercise1.sets = [
         Exercise.ExerciseSet("Set 1"),

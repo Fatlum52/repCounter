@@ -220,7 +220,7 @@ class FileManagerHelper {
     }
 
     // deletes media from training session
-    static func deleteMediaFiles(for session: TrainingSession) {
+    static func deleteMediaFiles(for session: Session) {
         for exercise in session.exercises {
             deleteMediaFiles(for: exercise)
         }
