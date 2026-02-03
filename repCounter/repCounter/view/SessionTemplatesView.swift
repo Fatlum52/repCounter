@@ -45,6 +45,7 @@ struct SessionTemplatesView: View {
 #if os(macOS)
         .frame(minWidth: 500, minHeight: 300)
 #endif
+        .interactiveDismissDisabled(hasUnsavedChangesInInlineField)
         .sheet(isPresented: $showEditSheet) {
             editSheetContent
         }
@@ -175,6 +176,7 @@ struct SessionTemplatesView: View {
                     exerciseTemplatePickerOverlay
                 }
             }
+            .interactiveDismissDisabled(true)
         }
     }
     
@@ -211,6 +213,7 @@ struct SessionTemplatesView: View {
                     exerciseTemplatePickerOverlay
                 }
             }
+            .interactiveDismissDisabled(true)
         }
     }
     
@@ -351,6 +354,10 @@ struct SessionTemplatesView: View {
     }
     
     // MARK: - Helper Functions
+    private var hasUnsavedChangesInInlineField: Bool {
+        !newTemplateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     private func addTemplate(name: String) {
         let finalName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !finalName.isEmpty else { return }

@@ -41,6 +41,7 @@ struct ExerciseTemplatesView: View {
 #if os(macOS)
         .frame(minWidth: 500, minHeight: 300)
 #endif
+        .interactiveDismissDisabled(hasUnsavedChanges)
         .overlay {
             NameEditOverlay(
                 title: showNameEditOverlay && editingTemplate == nil ? "New Exercise Template" : "Edit Exercise Template",
@@ -150,6 +151,10 @@ struct ExerciseTemplatesView: View {
     }
     
     // MARK: - Helper Functions
+    private var hasUnsavedChanges: Bool {
+        showNameEditOverlay || !newTemplateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     private func addTemplate(name: String) {
         let finalName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !finalName.isEmpty else { return }
