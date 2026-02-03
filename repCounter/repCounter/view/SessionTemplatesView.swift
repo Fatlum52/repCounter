@@ -402,7 +402,3 @@ struct SessionTemplatesView: View {
         SessionTemplateStore.shared.removeTemplate(template, in: modelContext)
     }
 }
-
-#Preview {
-    //SessionTemplatesView()
-}

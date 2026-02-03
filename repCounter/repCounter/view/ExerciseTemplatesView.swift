@@ -172,7 +172,3 @@ struct ExerciseTemplatesView: View {
         ExerciseTemplateStore.shared.removeTemplate(template, in: modelContext)
     }
 }
-
-#Preview {
-    //ExerciseTemplatesView()
-}
