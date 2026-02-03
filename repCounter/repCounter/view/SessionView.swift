@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-struct TrainingSessionView: View {
+struct SessionView: View {
     
     // MARK: - Environment & Data
     @Environment(\.modelContext) private var modelContext

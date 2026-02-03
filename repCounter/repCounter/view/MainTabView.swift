@@ -16,7 +16,7 @@ struct MainTabView: View {
             TabView {
                 
                 Tab("Workouts", systemImage: "figure.run") {
-                    TrainingSessionView()
+                    SessionView()
                 }
                 
                 Tab("Library", systemImage: "building.columns.fill") {
