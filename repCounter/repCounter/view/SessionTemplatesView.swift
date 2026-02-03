@@ -11,8 +11,7 @@ struct SessionTemplatesView: View {
     
     // MARK: - State
     @State private var newTemplateName: String = ""
-    @State private var showEditSheet: Bool = false
-    @State private var showAddSheet: Bool = false
+    @State private var showSessionSheet: Bool = false
     @State private var editingTemplate: SessionTemplate?
     @State private var editingName: String = ""
     @State private var editingExerciseNames: [String] = []
@@ -22,7 +21,7 @@ struct SessionTemplatesView: View {
         ZStack {
             Background()
             
-            VStack(spacing: 0) {
+            VStack {
                 // Add Button Section
                 addButtonSection
                 
@@ -46,11 +45,8 @@ struct SessionTemplatesView: View {
         .frame(minWidth: 500, minHeight: 300)
 #endif
         .interactiveDismissDisabled(hasUnsavedChangesInInlineField)
-        .sheet(isPresented: $showEditSheet) {
-            editSheetContent
-        }
-        .sheet(isPresented: $showAddSheet) {
-            addSheetContent
+        .sheet(isPresented: $showSessionSheet) {
+            sessionSheetContent
         }
     }
     
@@ -144,76 +140,112 @@ struct SessionTemplatesView: View {
             .padding(.top, 3)
     }
     
-    // MARK: - Edit Sheet Content
+    // MARK: - Session Sheet Content
     @ViewBuilder
-    private var editSheetContent: some View {
-        NavigationStack {
-            ZStack {
-                Background()
-                
-                VStack(spacing: 20) {
-                    sessionEditView
-                    Spacer()
+    private var sessionSheetContent: some View {
+        if showExerciseTemplatePicker {
+            exerciseTemplatePicker
+        } else {
+            NavigationStack {
+                ZStack {
+                    Background()
+                    VStack(spacing: 20) {
+                        sessionEditView
+                        Spacer()
+                    }
+                    .padding()
                 }
-                .padding()
-            }
-            .navigationTitle("Edit Session Template")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        showEditSheet = false
-                        editingTemplate = nil
+                .navigationTitle("Session Template")
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            dismissSessionSheet()
+                        }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save") {
+                            if editingTemplate != nil {
+                                saveEdit()
+                            } else {
+                                saveAdd()
+                            }
+                        }
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        saveEdit()
-                    }
-                }
+                .interactiveDismissDisabled(true)
             }
-            .overlay {
-                if showExerciseTemplatePicker {
-                    exerciseTemplatePickerOverlay
-                }
-            }
-            .interactiveDismissDisabled(true)
         }
     }
-    
-    // MARK: - Add Sheet Content
+
+    /// Picker as sheet
     @ViewBuilder
-    private var addSheetContent: some View {
-        NavigationStack {
-            ZStack {
-                Background()
-                
-                VStack(spacing: 20) {
-                    sessionEditView
+    private var exerciseTemplatePicker: some View {
+        ZStack {
+            Group {
+#if os(iOS)
+                Color(uiColor: .systemBackground)
+#elseif os(macOS)
+                Color(nsColor: .windowBackgroundColor)
+#endif
+            }
+            .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Text("Select Exercise Templates")
+                        .font(.headline)
                     Spacer()
-                }
-                .padding()
-            }
-            .navigationTitle("New Session Template")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        showAddSheet = false
-                        editingName = ""
-                        editingExerciseNames = []
+                    Button("Done") {
+                        showExerciseTemplatePicker = false
                     }
+                    .buttonStyle(.borderedProminent)
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        saveAdd()
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+
+                Divider()
+
+                // list of exercises to pick
+                ScrollView {
+                    VStack(spacing: 8) {
+                        ForEach(exerciseTemplates) { template in
+                            Button {
+                                if !editingExerciseNames.contains(template.name) {
+                                    editingExerciseNames.append(template.name)
+                                }
+                                showExerciseTemplatePicker = false
+                            } label: {
+                                CardStyle {
+                                    Text(template.name)
+                                        .font(.headline)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+                    .padding(.bottom, 24)
                 }
-            }
-            .overlay {
-                if showExerciseTemplatePicker {
-                    exerciseTemplatePickerOverlay
+                .scrollIndicators(.visible)
+
+                Divider()
+
+                // footer
+                Button("Close") {
+                    showExerciseTemplatePicker = false
                 }
+                .buttonStyle(.bordered)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
             }
-            .interactiveDismissDisabled(true)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+#if os(iOS)
+            .background(Color(uiColor: .systemBackground))
+#elseif os(macOS)
+            .background(Color(nsColor: .windowBackgroundColor))
+#endif
         }
     }
     
@@ -267,7 +299,7 @@ struct SessionTemplatesView: View {
                         HStack(alignment: .center, spacing: 8) {
                             Image(systemName: "list.bullet")
                                 .frame(width: 20, alignment: .center)
-
+                            
                             Text("Add from Templates")
                                 .lineLimit(2)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -279,100 +311,32 @@ struct SessionTemplatesView: View {
         }
     }
     
-    // MARK: - Exercise Template Picker Overlay
-    @ViewBuilder
-    private var exerciseTemplatePickerOverlay: some View {
-        ZStack {
-            // Semi-transparent background
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    showExerciseTemplatePicker = false
-                }
-            
-            // Picker content
-            VStack {
-                Spacer()
-                
-                VStack(spacing: 0) {
-                    // Header
-                    HStack {
-                        Text("Select Exercise Templates")
-                            .font(.headline)
-                            .padding()
-                        Spacer()
-                        Button {
-                            showExerciseTemplatePicker = false
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
-                        }
-                        .padding()
-                    }
-                    
-                    Divider()
-                    
-                    // List
-                    ScrollView {
-                        VStack(spacing: 8) {
-                            ForEach(exerciseTemplates) { template in
-                                Button {
-                                    // Add template name to exercises if not already present
-                                    if !editingExerciseNames.contains(template.name) {
-                                        editingExerciseNames.append(template.name)
-                                    }
-                                    showExerciseTemplatePicker = false
-                                } label: {
-                                    CardStyle {
-                                        Text(template.name)
-                                            .font(.headline)
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding()
-                    }
-#if os(iOS)
-                    .frame(maxHeight: 400)
-#elseif os(macOS)
-                    .frame(minWidth: 600, minHeight: 500, maxHeight: 600)
-#endif
-                }
-#if os(iOS)
-                .background(Color(uiColor: .systemBackground))
-#elseif os(macOS)
-                .background(Color(nsColor: .windowBackgroundColor))
-#endif
-                .cornerRadius(16)
-                .padding()
-                .shadow(radius: 10)
-                
-                Spacer()
-            }
-        }
-    }
-    
     // MARK: - Helper Functions
     private var hasUnsavedChangesInInlineField: Bool {
         !newTemplateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
-
+    
+    private func dismissSessionSheet() {
+        showSessionSheet = false
+        editingTemplate = nil
+        editingName = ""
+        editingExerciseNames = []
+    }
+    
     private func addTemplate(name: String) {
         let finalName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !finalName.isEmpty else { return }
-        
-        // Open add sheet with pre-filled name
+        editingTemplate = nil
         editingName = finalName
         editingExerciseNames = []
-        showAddSheet = true
+        showSessionSheet = true
     }
     
     private func editTemplate(_ template: SessionTemplate) {
         editingTemplate = template
         editingName = template.name
         editingExerciseNames = template.exerciseNames
-        showEditSheet = true
+        showSessionSheet = true
     }
     
     private func saveEdit() {
@@ -380,10 +344,7 @@ struct SessionTemplatesView: View {
             template.name = editingName
             template.exerciseNames = editingExerciseNames.filter { !$0.isEmpty }
         }
-        showEditSheet = false
-        editingTemplate = nil
-        editingName = ""
-        editingExerciseNames = []
+        dismissSessionSheet()
     }
     
     private func saveAdd() {
@@ -393,9 +354,7 @@ struct SessionTemplatesView: View {
             exercises: filteredExercises,
             in: modelContext
         )
-        showAddSheet = false
-        editingName = ""
-        editingExerciseNames = []
+        dismissSessionSheet()
     }
     
     private func deleteTemplate(_ template: SessionTemplate) {
