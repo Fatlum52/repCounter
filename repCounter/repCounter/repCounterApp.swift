@@ -10,6 +10,7 @@ import SwiftData
 
 @main
 struct repCounterApp: App {
+    
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Session.self,
