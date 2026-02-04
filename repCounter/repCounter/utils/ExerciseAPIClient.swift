@@ -16,6 +16,7 @@ struct ExerciseAPIClient {
             throw URLError(.badServerResponse)
         }
         
+        // decode data
         let decoded = try JSONDecoder().decode(ExerciseSearchResponseDTO.self, from: data)
         
         guard decoded.success else {
