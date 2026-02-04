@@ -22,6 +22,10 @@ struct MainTabView: View {
                 Tab("Library", systemImage: "building.columns.fill") {
                     LibraryView()
                 }
+                
+                Tab("Explore", systemImage: "magnifyingglass.circle") {
+                    ExploreView()
+                }
             }
         }
 #if os(iOS)
