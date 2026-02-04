@@ -9,11 +9,22 @@ struct ExploreView: View {
     @State private var hasSearched = false
     
     private let apiClient = ExerciseAPIClient()
-    
+
+#if os(iOS)
     private let columns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
     ]
+#elseif os(macOS)
+    private let columns = [
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12),
+        GridItem(.flexible(), spacing: 12)
+    ]
+#endif
     
     var body: some View {
         ZStack {
@@ -169,9 +180,15 @@ struct ExploreView: View {
         errorMessage = nil
         hasSearched = true
         
+#if os(iOS)
+        let searchLimit = 10
+#elseif os(macOS)
+        let searchLimit = 18
+#endif
+        
         Task {
             do {
-                let fetchedResults = try await apiClient.searchExercises(search: trimmed, limit: 10)
+                let fetchedResults = try await apiClient.searchExercises(search: trimmed, limit: searchLimit)
                 await MainActor.run {
                     results = fetchedResults
                     isLoading = false
