@@ -186,7 +186,7 @@ struct ExerciseDetailView: View {
             Spacer()
 
             // Weight input
-            TextField("0", value: weightBinding(for: set.id), format: .number)
+            TextField("0", value: setBinding(for: set.id, keyPath: \.weight), format: .number)
 #if os(iOS)
                 .keyboardType(.numberPad)
                 .focused($focusedField, equals: .weight(set.id))
@@ -201,7 +201,7 @@ struct ExerciseDetailView: View {
             Spacer()
 
             // Reps input
-            TextField("0", value: repsBinding(for: set.id), format: .number)
+            TextField("0", value: setBinding(for: set.id, keyPath: \.reps), format: .number)
 #if os(iOS)
                 .keyboardType(.numberPad)
                 .focused($focusedField, equals: .reps(set.id))
@@ -373,25 +373,16 @@ struct ExerciseDetailView: View {
     }
 
     // MARK: - Data Helpers
-    private func repsBinding(for id: Exercise.ExerciseSet.ID) -> Binding<Int> {
+    private func setBinding(
+        for id: Exercise.ExerciseSet.ID,
+        keyPath: WritableKeyPath<Exercise.ExerciseSet, Int>
+    ) -> Binding<Int> {
         Binding(
-            get: { exercise.sets.first(where: { $0.id == id })?.reps ?? 0 },
+            get: { exercise.sets.first { $0.id == id }?[keyPath: keyPath] ?? 0 },
             set: { newValue in
                 guard let idx = exercise.sets.firstIndex(where: { $0.id == id }) else { return }
                 var copy = exercise.sets
-                copy[idx].reps = newValue
-                exercise.sets = copy
-            }
-        )
-    }
-
-    private func weightBinding(for id: Exercise.ExerciseSet.ID) -> Binding<Int> {
-        Binding(
-            get: { exercise.sets.first(where: { $0.id == id })?.weight ?? 0 },
-            set: { newValue in
-                guard let idx = exercise.sets.firstIndex(where: { $0.id == id }) else { return }
-                var copy = exercise.sets
-                copy[idx].weight = newValue
+                copy[idx][keyPath: keyPath] = newValue
                 exercise.sets = copy
             }
         )
