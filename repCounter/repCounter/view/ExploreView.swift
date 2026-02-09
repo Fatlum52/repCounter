@@ -92,7 +92,7 @@ struct ExploreView: View {
                 }
             }
             .padding(12)
-            .background(.regularMaterial)
+            .background(Color.gray.opacity(0.15))
             .cornerRadius(12)
             
             Button {
