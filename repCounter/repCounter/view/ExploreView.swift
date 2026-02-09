@@ -111,7 +111,7 @@ struct ExploreView: View {
     private var resultsGrid: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 16) {
-                ForEach(results, id: \.exerciseId) { exercise in
+                ForEach(results) { exercise in
                     ExerciseCardView(exercise: exercise)
                 }
             }
@@ -210,7 +210,7 @@ struct ExerciseCardView: View {
     var body: some View {
         VStack(spacing: 8) {
             // GIF Image
-            AsyncImage(url: URL(string: exercise.gifUrl)) { phase in
+            AsyncImage(url: URL(string: exercise.imageUrl ?? "")) { phase in
                 switch phase {
                 case .empty:
                     ZStack {
