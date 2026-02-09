@@ -30,7 +30,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		1B1ECBA52F0FE7D200EC71CC /* Exceptions for "repCounter" folder in "repCounter" target */ = {
+		1B4B85522F3A02ED0057B8DA /* Exceptions for "repCounter" folder in "repCounter" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -41,14 +41,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		1B1433C72F0D2BB2003C8D57 /* repCounter */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				1B1ECBA52F0FE7D200EC71CC /* Exceptions for "repCounter" folder in "repCounter" target */,
-			);
-			path = repCounter;
-			sourceTree = "<group>";
-		};
 		1B1433D72F0D2BB3003C8D57 /* repCounterTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = repCounterTests;
@@ -57,6 +49,14 @@
 		1B1433E12F0D2BB3003C8D57 /* repCounterUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = repCounterUITests;
+			sourceTree = "<group>";
+		};
+		1B4B852C2F3A02ED0057B8DA /* repCounter */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1B4B85522F3A02ED0057B8DA /* Exceptions for "repCounter" folder in "repCounter" target */,
+			);
+			path = repCounter;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -89,7 +89,7 @@
 		1B1433BC2F0D2BB2003C8D57 = {
 			isa = PBXGroup;
 			children = (
-				1B1433C72F0D2BB2003C8D57 /* repCounter */,
+				1B4B852C2F3A02ED0057B8DA /* repCounter */,
 				1B1433D72F0D2BB3003C8D57 /* repCounterTests */,
 				1B1433E12F0D2BB3003C8D57 /* repCounterUITests */,
 				1B1433C62F0D2BB2003C8D57 /* Products */,
@@ -122,7 +122,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				1B1433C72F0D2BB2003C8D57 /* repCounter */,
+				1B4B852C2F3A02ED0057B8DA /* repCounter */,
 			);
 			name = repCounter;
 			packageProductDependencies = (
