@@ -8,79 +8,39 @@ import UniformTypeIdentifiers
 #endif
 
 struct ExerciseDetailView: View {
-    
+
     @Bindable var exercise: Exercise
     @FocusState private var focusedField: SetFocusField?
-    
+
 #if os(iOS)
-    @State private var selectedItem: PhotosPickerItem? // holds the selected Photo item
-    @State private var showPhotoLibrary: Bool = false // control photo library picker visibility
+    @State private var selectedItem: PhotosPickerItem?
+    @State private var showPhotoLibrary = false
 #elseif os(macOS)
-    @State private var showFilePicker: Bool = false
+    @State private var showFilePicker = false
 #endif
-    @State private var showMediaGallery: Bool = false
-    @State private var showNotesSheet: Bool = false
-    
+    @State private var showMediaGallery = false
+    @State private var showNotesSheet = false
+
     var body: some View {
         ZStack {
             Background()
-            
-            VStack {
-#if os(macOS)
-                // macOS: Add padding at top
-                Spacer()
-                    .frame(height: 8)
-#endif
-                // Set Card
-                CardSet(
-                exercise: exercise,
-                focusedField: $focusedField,
-                onAddSet: { addSet() },
-                onDeleteSet: { id in
-                    deleteSet(id: id)
-                },
-                repsBinding: { id in
-                    repsBinding(for: id)
-                },
-                weightBinding: { id in
-                    weightBinding(for: id)
+
+            ScrollView {
+                VStack(spacing: 20) {
+                    statsHeader
+                    setsSection
+                    notesSection
+                    mediaSection
                 }
-            )
-            .padding(.horizontal)
-            
-            
-            HStack {
-                // Notes Button
-                Button("Notes", systemImage: "list.bullet.clipboard") {
-                    showNotesSheet = true
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                
-                // Media Button
-                Menu {
-#if os(iOS)
-                    Button("Select Media", systemImage: "photo.badge.plus") {
-                        showPhotoLibrary = true
-                    }
-#elseif os(macOS)
-                    Button("Select Media", systemImage: "photo.badge.plus") {
-                        showFilePicker = true
-                    }
-#endif
-                    Button("Show Media", systemImage: "photo.stack") {
-                        showMediaGallery = true
-                    }
-                } label: {
-                    Label("Media", systemImage: "photo.on.rectangle")
-                }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
+                .padding(.vertical, 16)
             }
-            }
+            .scrollIndicators(.hidden)
+            .scrollDismissesKeyboard(.interactively)
         }
         .navigationTitle(exercise.name)
 #if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .photosPicker(
             isPresented: $showPhotoLibrary,
             selection: $selectedItem,
@@ -89,40 +49,17 @@ struct ExerciseDetailView: View {
         )
         .onChange(of: selectedItem) { _, newItem in
             guard let newItem else { return }
-            
-            Task {
-                // Try to load as image first
-                if let data = try? await newItem.loadTransferable(type: Data.self),
-                   let image = UIImage(data: data) {
-                    // Save a copy of the image to documents
-                    let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
-                    if FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
-                        await MainActor.run {
-                            let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .image)
-                            exercise.mediaItems.append(mediaItem)
-                        }
-                    }
-                    return
-                }
-                
-                // Try to load as video
-                if let videoData = try? await newItem.loadTransferable(type: Movie.self) {
-                    // Save a copy of the video to documents
-                    let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).mp4"
-                    if let savedURL = await FileManagerHelper.saveVideoToDocuments(videoURL: videoData.url, fileName: fileName) {
-                        await MainActor.run {
-                            let mediaItem = Exercise.MediaItem(fileName: savedURL.lastPathComponent, fileType: .video)
-                            exercise.mediaItems.append(mediaItem)
-                        }
-                    }
-                }
+            Task { await importMedia(from: newItem) }
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { focusedField = nil }
             }
         }
 #elseif os(macOS)
         .onChange(of: showFilePicker) { _, isShowing in
-            if isShowing {
-                selectImageFromFile()
-            }
+            if isShowing { selectImageFromFile() }
         }
 #endif
         .sheet(isPresented: $showMediaGallery) {
@@ -131,27 +68,319 @@ struct ExerciseDetailView: View {
         .sheet(isPresented: $showNotesSheet) {
             NotesSheetView(notes: $exercise.notes)
         }
-#if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
+    }
+
+    // MARK: - Stats Header
+    private var statsHeader: some View {
+        HStack(spacing: 16) {
+            statBadge(
+                value: "\(exercise.sets.count)",
+                label: "Sets",
+                icon: "number"
+            )
+            statBadge(
+                value: "\(exercise.totalReps)",
+                label: "Total Reps",
+                icon: "flame.fill"
+            )
+            statBadge(
+                value: "\(totalWeight) kg",
+                label: "Volume",
+                icon: "scalemass.fill"
+            )
+        }
+        .padding(.horizontal, 16)
+    }
+
+    private func statBadge(value: String, label: String, icon: String) -> some View {
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(.blue)
+            Text(value)
+                .font(.title3)
+                .fontWeight(.bold)
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .background(.regularMaterial)
+        .cornerRadius(12)
+    }
+
+    private var totalWeight: Int {
+        exercise.sets.reduce(0) { $0 + ($1.weight * max($1.reps, 1)) }
+    }
+
+    // MARK: - Sets Section
+    private var setsSection: some View {
+        VStack(spacing: 0) {
+            // Column headers
+            HStack {
+                Text("SET")
+                    .frame(width: 50, alignment: .leading)
                 Spacer()
-                Button("Fertig") { focusedField = nil }
-                    .padding(.trailing, 8)
+                Text("KG")
+                    .frame(width: 70, alignment: .center)
+                Spacer()
+                Text("REPS")
+                    .frame(width: 70, alignment: .center)
+                // Space for delete button
+                Color.clear.frame(width: 32)
+            }
+            .font(.caption)
+            .fontWeight(.semibold)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 8)
+
+            // Set rows
+            ForEach(Array(exercise.sets.enumerated()), id: \.element.id) { index, set in
+                setRow(index: index, set: set)
+
+                if index < exercise.sets.count - 1 {
+                    Divider()
+                        .padding(.horizontal, 20)
+                }
+            }
+
+            // Add set button
+            Button {
+                withAnimation(.spring(duration: 0.3)) {
+                    if let newID = addSet() {
+#if os(iOS)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            focusedField = .reps(newID)
+                        }
+#endif
+                    }
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
+                    Text("Add Set")
+                        .fontWeight(.medium)
+                }
+                .foregroundStyle(.blue)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 14)
             }
         }
-#endif
+        .padding(.vertical, 12)
+        .background(.regularMaterial)
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+        )
+        .padding(.horizontal, 16)
     }
-    
-    
-    ////////////////// HELPER FUNCTION //////////////////
-    
+
+    private func setRow(index: Int, set: Exercise.ExerciseSet) -> some View {
+        HStack(spacing: 0) {
+            // Set number
+            Text("\(index + 1)")
+                .font(.headline)
+                .foregroundStyle(.secondary)
+                .frame(width: 50, alignment: .leading)
+
+            Spacer()
+
+            // Weight input
+            TextField("0", value: weightBinding(for: set.id), format: .number)
+#if os(iOS)
+                .keyboardType(.numberPad)
+                .focused($focusedField, equals: .weight(set.id))
+#endif
+                .multilineTextAlignment(.center)
+                .font(.title3)
+                .fontWeight(.medium)
+                .frame(width: 70, height: 40)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
+
+            Spacer()
+
+            // Reps input
+            TextField("0", value: repsBinding(for: set.id), format: .number)
+#if os(iOS)
+                .keyboardType(.numberPad)
+                .focused($focusedField, equals: .reps(set.id))
+#endif
+                .multilineTextAlignment(.center)
+                .font(.title3)
+                .fontWeight(.medium)
+                .frame(width: 70, height: 40)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
+
+            // Delete button
+            Button(role: .destructive) {
+                withAnimation(.spring(duration: 0.3)) {
+                    deleteSet(id: set.id)
+                }
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundStyle(.secondary.opacity(0.5))
+                    .font(.body)
+            }
+            .buttonStyle(.plain)
+            .frame(width: 32)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 10)
+    }
+
+    // MARK: - Notes Section
+
+    private var notesSection: some View {
+        Button {
+            showNotesSheet = true
+        } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(.blue.opacity(0.12))
+                        .frame(width: 40, height: 40)
+                    Image(systemName: "note.text")
+                        .font(.body)
+                        .foregroundStyle(.blue)
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Notes")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.primary)
+
+                    if exercise.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text("Tap to add notes...")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(notesPreview)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(16)
+            .background(.regularMaterial)
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 16)
+    }
+
+    private var notesPreview: String {
+        let trimmed = exercise.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.count <= 80 { return trimmed }
+        return String(trimmed.prefix(80)) + "..."
+    }
+
+    // MARK: - Media Section
+
+    private var mediaSection: some View {
+        VStack(spacing: 12) {
+            // Gallery button (if media exists)
+            if !exercise.mediaItems.isEmpty {
+                Button {
+                    showMediaGallery = true
+                } label: {
+                    HStack(spacing: 14) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(.purple.opacity(0.12))
+                                .frame(width: 40, height: 40)
+                            Image(systemName: "photo.stack")
+                                .font(.body)
+                                .foregroundStyle(.purple)
+                        }
+
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Media")
+                                .font(.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.primary)
+                            Text("\(exercise.mediaItems.count) item\(exercise.mediaItems.count == 1 ? "" : "s")")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(16)
+                    .background(.regularMaterial)
+                    .cornerRadius(16)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+
+            // Add media button
+            Button {
+#if os(iOS)
+                showPhotoLibrary = true
+#elseif os(macOS)
+                showFilePicker = true
+#endif
+            } label: {
+                HStack(spacing: 14) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(.green.opacity(0.12))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: "plus.circle.fill")
+                            .font(.body)
+                            .foregroundStyle(.green)
+                    }
+
+                    Text(exercise.mediaItems.isEmpty ? "Add Media" : "Add More Media")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.primary)
+
+                    Spacer()
+                }
+                .padding(16)
+                .background(.regularMaterial)
+                .cornerRadius(16)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 16)
+    }
+
+    // MARK: - Data Helpers
+
     private func repsBinding(for id: Exercise.ExerciseSet.ID) -> Binding<Int> {
         Binding(
-            get: {
-                exercise.sets.first(where: { $0.id == id })?.reps ?? 0
-            },
+            get: { exercise.sets.first(where: { $0.id == id })?.reps ?? 0 },
             set: { newValue in
                 guard let idx = exercise.sets.firstIndex(where: { $0.id == id }) else { return }
                 var copy = exercise.sets
@@ -160,12 +389,10 @@ struct ExerciseDetailView: View {
             }
         )
     }
-    
+
     private func weightBinding(for id: Exercise.ExerciseSet.ID) -> Binding<Int> {
         Binding(
-            get: {
-                exercise.sets.first(where: { $0.id == id })?.weight ?? 0
-            },
+            get: { exercise.sets.first(where: { $0.id == id })?.weight ?? 0 },
             set: { newValue in
                 guard let idx = exercise.sets.firstIndex(where: { $0.id == id }) else { return }
                 var copy = exercise.sets
@@ -174,52 +401,83 @@ struct ExerciseDetailView: View {
             }
         )
     }
-    
+
+    @discardableResult
     private func addSet() -> Exercise.ExerciseSet.ID? {
-        let newIndex = exercise.sets.count + 1
-        let newSet = Exercise.ExerciseSet("Set \(newIndex)")
-        
+        let newSet = Exercise.ExerciseSet("Set \(exercise.sets.count + 1)")
         var copy = exercise.sets
         copy.append(newSet)
         exercise.sets = copy
-        
         return newSet.id
     }
-    
+
     private func deleteSet(id: Exercise.ExerciseSet.ID) {
         var copy = exercise.sets
         copy.removeAll { $0.id == id }
         exercise.sets = copy
     }
-    
+
+    // MARK: - Media Import
+#if os(iOS)
+    private func importMedia(from item: PhotosPickerItem) async {
+        // Try image
+        if let data = try? await item.loadTransferable(type: Data.self),
+           let image = UIImage(data: data) {
+            let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
+            if await FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
+                await MainActor.run {
+                    exercise.mediaItems.append(
+                        Exercise.MediaItem(fileName: fileName, fileType: .image)
+                    )
+                }
+            }
+            return
+        }
+        // Try video
+        if let video = try? await item.loadTransferable(type: Movie.self) {
+            let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).mp4"
+            if let savedURL = await FileManagerHelper.saveVideoToDocuments(videoURL: video.url, fileName: fileName) {
+                await MainActor.run {
+                    exercise.mediaItems.append(
+                        Exercise.MediaItem(fileName: savedURL.lastPathComponent, fileType: .video)
+                    )
+                }
+            }
+        }
+    }
+#endif
+
 #if os(macOS)
     private func selectImageFromFile() {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
-        panel.allowedContentTypes = [.image, .jpeg, .png, .gif, .heic, .movie, .mpeg4Movie, .quickTimeMovie]
-        
+        panel.allowedContentTypes = [
+            .image, .jpeg, .png, .gif, .heic,
+            .movie, .mpeg4Movie, .quickTimeMovie
+        ]
         panel.begin { response in
             if response == .OK {
                 Task {
                     for url in panel.urls {
-                        // Check if it's a video
-                        if url.pathExtension.lowercased() == "mov" || url.pathExtension.lowercased() == "mp4" || url.pathExtension.lowercased() == "m4v" {
+                        let ext = url.pathExtension.lowercased()
+                        if ["mov", "mp4", "m4v"].contains(ext) {
                             let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).mp4"
                             if let savedURL = await FileManagerHelper.saveVideoToDocuments(videoURL: url, fileName: fileName) {
                                 await MainActor.run {
-                                    let mediaItem = Exercise.MediaItem(fileName: savedURL.lastPathComponent, fileType: .video)
-                                    exercise.mediaItems.append(mediaItem)
+                                    exercise.mediaItems.append(
+                                        Exercise.MediaItem(fileName: savedURL.lastPathComponent, fileType: .video)
+                                    )
                                 }
                             }
                         } else if let image = NSImage(contentsOf: url) {
-                            // It's an image
                             let fileName = "exercise_\(exercise.id)_\(UUID().uuidString).jpg"
-                            if FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
+                            if await FileManagerHelper.saveImageToDocuments(image: image, fileName: fileName) != nil {
                                 await MainActor.run {
-                                    let mediaItem = Exercise.MediaItem(fileName: fileName, fileType: .image)
-                                    exercise.mediaItems.append(mediaItem)
+                                    exercise.mediaItems.append(
+                                        Exercise.MediaItem(fileName: fileName, fileType: .image)
+                                    )
                                 }
                             }
                         }
@@ -235,8 +493,8 @@ struct ExerciseDetailView: View {
 #Preview {
     let config = ModelConfiguration(isStoredInMemoryOnly: true)
     let container = try! ModelContainer(for: Exercise.self, configurations: config)
-    let exercise = Exercise("Pushup")
-    
+    let exercise = Exercise("Bench Press")
+
     return NavigationStack {
         ExerciseDetailView(exercise: exercise)
             .modelContainer(container)
