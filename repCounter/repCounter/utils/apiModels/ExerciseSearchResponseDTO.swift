@@ -2,6 +2,6 @@ import Foundation
 
 struct ExerciseSearchResponseDTO: Decodable {
     let success: Bool
-    let metadata: MetadataDTO
+    let meta: MetadataDTO
     let data: [ExerciseDTO]
 }
