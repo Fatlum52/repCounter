@@ -34,6 +34,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				Secrets.plist.example,
 			);
 			target = 1B1433C42F0D2BB2003C8D57 /* repCounter */;
 		};
