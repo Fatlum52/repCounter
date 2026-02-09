@@ -2,7 +2,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Transferable wrapper for importing videos via PhotosPicker.
+/// Transferable wrapper for importing videos via PhotosPicker
 struct Movie: Transferable {
     let url: URL
 
