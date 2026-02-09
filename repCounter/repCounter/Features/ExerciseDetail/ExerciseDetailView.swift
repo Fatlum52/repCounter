@@ -16,7 +16,7 @@ struct ExerciseDetailView: View {
     @State private var selectedItem: PhotosPickerItem?
     @State private var showPhotoLibrary = false
 #elseif os(macOS)
-    @State private var showFilePicker = false
+    @State var showFilePicker = false
 #endif
     @State private var showMediaGallery = false
     @State private var showNotesSheet = false
