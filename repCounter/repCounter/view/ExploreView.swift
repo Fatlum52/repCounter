@@ -209,7 +209,7 @@ struct ExerciseCardView: View {
     
     var body: some View {
         VStack(spacing: 8) {
-            // GIF Image
+            // Image
             AsyncImage(url: URL(string: exercise.imageUrl ?? "")) { phase in
                 switch phase {
                 case .empty:
