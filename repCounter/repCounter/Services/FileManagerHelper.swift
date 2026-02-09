@@ -19,17 +19,24 @@ class FileManagerHelper {
 
     // MARK: - Image Support
 #if os(iOS)
-    // saves UIImage as jpge in document directory
-    static func saveImageToDocuments(image: UIImage, fileName: String) -> URL? {
-        guard let data = image.jpegData(compressionQuality: 0.8) else { return nil }
+    // saves UIImage as jpeg in documents directory (background QoS to avoid priority inversion)
+    @discardableResult
+    static func saveImageToDocuments(image: UIImage, fileName: String) async -> URL? {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
-
-        do {
-            try data.write(to: url)
-            return url
-        } catch {
-            print("Error saving image: \(error)")
-            return nil
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .utility).async {
+                guard let data = image.jpegData(compressionQuality: 0.8) else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                do {
+                    try data.write(to: url)
+                    continuation.resume(returning: url)
+                } catch {
+                    print("Error saving image: \(error)")
+                    continuation.resume(returning: nil)
+                }
+            }
         }
     }
 
@@ -42,27 +49,33 @@ class FileManagerHelper {
 
 #elseif os(macOS)
 
-    // saves NSImage as jpeg in documents directory
-    static func saveImageToDocuments(image: NSImage, fileName: String) -> URL? {
-        guard let tiffData = image.tiffRepresentation,
-              let bitmapImage = NSBitmapImageRep(data: tiffData),
-              let data = bitmapImage.representation(
-                using: .jpeg,
-                properties: [.compressionFactor: 0.8]
-              ) else { return nil }
-
+    // saves NSImage as jpeg in documents directory (background QoS to avoid priority inversion)
+    @discardableResult
+    static func saveImageToDocuments(image: NSImage, fileName: String) async -> URL? {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
-
-        do {
-            try data.write(to: url)
-            return url
-        } catch {
-            print("Error saving image: \(error)")
-            return nil
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .utility).async {
+                guard let tiffData = image.tiffRepresentation,
+                      let bitmapImage = NSBitmapImageRep(data: tiffData),
+                      let data = bitmapImage.representation(
+                        using: .jpeg,
+                        properties: [.compressionFactor: 0.8]
+                      ) else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                do {
+                    try data.write(to: url)
+                    continuation.resume(returning: url)
+                } catch {
+                    print("Error saving image: \(error)")
+                    continuation.resume(returning: nil)
+                }
+            }
         }
     }
 
-    // loads saved photo as SwiftUI Image
+    // loads saved image as SwiftUI Image
     static func loadImageFromDocuments(fileName: String) -> Image? {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
         guard let nsImage = NSImage(contentsOfFile: url.path) else { return nil }
