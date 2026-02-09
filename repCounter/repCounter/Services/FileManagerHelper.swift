@@ -12,16 +12,13 @@ import AVFoundation
 class FileManagerHelper {
 
     // MARK: - Documents Directory
-
     // documents directory of the app
     static func getDocumentsDirectory() -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
 
     // MARK: - Image Support
-
 #if os(iOS)
-
     // saves UIImage as jpge in document directory
     static func saveImageToDocuments(image: UIImage, fileName: String) -> URL? {
         guard let data = image.jpegData(compressionQuality: 0.8) else { return nil }
@@ -81,7 +78,6 @@ class FileManagerHelper {
     }
 
     // MARK: - Video Support
-
     // public entrypoint to safe videos
     static func saveVideoToDocuments(videoURL: URL, fileName: String) async -> URL? {
         let destinationURL = getDocumentsDirectory().appendingPathComponent(fileName)
@@ -124,35 +120,24 @@ class FileManagerHelper {
             )
         }
 
-        exportSession.outputURL = destinationURL
-        exportSession.outputFileType = .mp4
         exportSession.shouldOptimizeForNetworkUse = true
 
-        // asynchronous export
-        return await withCheckedContinuation { continuation in
-            exportSession.exportAsynchronously {
+        // export using iOS 18+ API
+        do {
+            try await exportSession.export(to: destinationURL, as: .mp4)
 
-                if exportSession.status == .completed {
-
-                    // temporary camera-video after export delete
-                    if sourceURL.path.contains(NSTemporaryDirectory()) {
-                        try? FileManager.default.removeItem(at: sourceURL)
-                    }
-
-                    continuation.resume(returning: destinationURL)
-
-                } else {
-                    print("Video export failed: \(exportSession.status.rawValue)")
-
-                    Task {
-                        let fallback = await copyVideoFallback(
-                            sourceURL: sourceURL,
-                            destinationURL: destinationURL
-                        )
-                        continuation.resume(returning: fallback)
-                    }
-                }
+            // clean up temporary camera video after export
+            if sourceURL.path.contains(NSTemporaryDirectory()) {
+                try? FileManager.default.removeItem(at: sourceURL)
             }
+
+            return destinationURL
+        } catch {
+            print("Video export failed: \(error)")
+            return await copyVideoFallback(
+                sourceURL: sourceURL,
+                destinationURL: destinationURL
+            )
         }
     }
 
@@ -211,7 +196,6 @@ class FileManagerHelper {
     }
 
     // MARK: - Media Cleanup
-
     // deletes media from exercise
     static func deleteMediaFiles(for exercise: Exercise) {
         for mediaItem in exercise.mediaItems {
