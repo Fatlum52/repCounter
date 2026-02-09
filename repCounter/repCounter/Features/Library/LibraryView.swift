@@ -45,8 +45,13 @@ struct LibraryView: View {
         HStack(spacing: 16) {
             StatBadge(value: "\(exerciseTemplates.count)", label: "Exercises", icon: "dumbbell.fill", color: .orange)
             StatBadge(value: "\(sessionTemplates.count)", label: "Sessions", icon: "calendar", color: .purple)
+            StatBadge(value: "\(totalExercisesAcrossSessions)", label: "Total Used", icon: "chart.bar.fill")
         }
         .padding(.horizontal, 16)
+    }
+
+    private var totalExercisesAcrossSessions: Int {
+        sessionTemplates.reduce(0) { $0 + $1.exerciseNames.count }
     }
 
     // MARK: - Exercise Templates Section
