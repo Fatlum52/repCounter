@@ -40,3 +40,4 @@ final class Exercise: Identifiable {
         sets.reduce(0) { $0 + $1.reps }
     }
 }
+
