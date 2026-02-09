@@ -39,5 +39,9 @@ final class Exercise: Identifiable {
     var totalReps: Int {
         sets.reduce(0) { $0 + $1.reps }
     }
+
+    var totalWeight: Int {
+        sets.reduce(0) { $0 + ($1.weight * max($1.reps, 1)) }
+    }
 }
 

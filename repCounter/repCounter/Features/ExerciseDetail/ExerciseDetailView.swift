@@ -84,7 +84,7 @@ struct ExerciseDetailView: View {
                 icon: "flame.fill"
             )
             statBadge(
-                value: "\(totalWeight) kg",
+                value: "\(exercise.totalWeight) kg",
                 label: "Volume",
                 icon: "scalemass.fill"
             )
@@ -108,10 +108,6 @@ struct ExerciseDetailView: View {
         .padding(.vertical, 14)
         .background(.regularMaterial)
         .cornerRadius(12)
-    }
-
-    private var totalWeight: Int {
-        exercise.sets.reduce(0) { $0 + ($1.weight * max($1.reps, 1)) }
     }
 
     // MARK: - Sets Section
@@ -377,7 +373,6 @@ struct ExerciseDetailView: View {
     }
 
     // MARK: - Data Helpers
-
     private func repsBinding(for id: Exercise.ExerciseSet.ID) -> Binding<Int> {
         Binding(
             get: { exercise.sets.first(where: { $0.id == id })?.reps ?? 0 },
