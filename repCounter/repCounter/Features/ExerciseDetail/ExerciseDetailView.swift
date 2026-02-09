@@ -73,41 +73,11 @@ struct ExerciseDetailView: View {
     // MARK: - Stats Header
     private var statsHeader: some View {
         HStack(spacing: 16) {
-            statBadge(
-                value: "\(exercise.sets.count)",
-                label: "Sets",
-                icon: "number"
-            )
-            statBadge(
-                value: "\(exercise.totalReps)",
-                label: "Total Reps",
-                icon: "flame.fill"
-            )
-            statBadge(
-                value: "\(exercise.totalWeight) kg",
-                label: "Volume",
-                icon: "scalemass.fill"
-            )
+            StatBadge(value: "\(exercise.sets.count)", label: "Sets", icon: "number")
+            StatBadge(value: "\(exercise.totalReps)", label: "Total Reps", icon: "flame.fill")
+            StatBadge(value: "\(exercise.totalWeight) kg", label: "Volume", icon: "scalemass.fill")
         }
         .padding(.horizontal, 16)
-    }
-
-    private func statBadge(value: String, label: String, icon: String) -> some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(.blue)
-            Text(value)
-                .font(.title3)
-                .fontWeight(.bold)
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
-        .background(.regularMaterial)
-        .cornerRadius(12)
     }
 
     // MARK: - Sets Section

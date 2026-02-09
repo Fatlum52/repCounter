@@ -43,48 +43,10 @@ struct LibraryView: View {
     // MARK: - Header Stats
     private var headerStats: some View {
         HStack(spacing: 16) {
-            statBadge(
-                value: "\(exerciseTemplates.count)",
-                label: "Exercises",
-                icon: "dumbbell.fill",
-                color: .orange
-            )
-            statBadge(
-                value: "\(sessionTemplates.count)",
-                label: "Sessions",
-                icon: "calendar",
-                color: .purple
-            )
-            statBadge(
-                value: "\(totalExercisesAcrossSessions)",
-                label: "Total Used",
-                icon: "chart.bar.fill",
-                color: .blue
-            )
+            StatBadge(value: "\(exerciseTemplates.count)", label: "Exercises", icon: "dumbbell.fill", color: .orange)
+            StatBadge(value: "\(sessionTemplates.count)", label: "Sessions", icon: "calendar", color: .purple)
         }
         .padding(.horizontal, 16)
-    }
-
-    private func statBadge(value: String, label: String, icon: String, color: Color) -> some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(color)
-            Text(value)
-                .font(.title3)
-                .fontWeight(.bold)
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
-        .background(.regularMaterial)
-        .cornerRadius(12)
-    }
-
-    private var totalExercisesAcrossSessions: Int {
-        sessionTemplates.reduce(0) { $0 + $1.exerciseNames.count }
     }
 
     // MARK: - Exercise Templates Section
