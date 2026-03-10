@@ -5,4 +5,5 @@ struct MetadataDTO: Decodable {
     let hasNextPage: Bool?
     let hasPreviousPage: Bool?
     let nextCursor: String?
+    let previousCursor: String?
 }
