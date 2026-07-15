@@ -26,6 +26,10 @@ struct MainTabView: View {
                 Tab("Explore", systemImage: "magnifyingglass.circle") {
                     ExploreView()
                 }
+
+                Tab("More", systemImage: "ellipsis.circle") {
+                    MoreView()
+                }
             }
         }
 #if os(iOS)
