@@ -2,31 +2,23 @@ import SwiftUI
 
 struct ExploreView: View {
 
-    @State private var searchText = ""
-    @State private var results: [ExerciseDTO] = []
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-    @State private var hasSearched = false
+    @State private var model: ExploreModel
     @State private var selectedExercise: ExerciseDTO?
-
-    // Cursor-based pagination
-    @State private var currentPage = 1
-    @State private var totalResults = 0
-    @State private var hasNextPage = false
-    @State private var pageCursors: [String?] = [nil]
-
-    private let apiClient = ExerciseAPIClient()
 
 #if os(iOS)
     private let columns = [
         GridItem(.flexible(), spacing: 12),
         GridItem(.flexible(), spacing: 12)
     ]
-    private let pageSize = 10
+    private static let pageSize = 10
 #elseif os(macOS)
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 6)
-    private let pageSize = 12
+    private static let pageSize = 12
 #endif
+
+    init() {
+        _model = State(initialValue: ExploreModel(pageSize: Self.pageSize))
+    }
 
     var body: some View {
         ZStack {
@@ -35,20 +27,20 @@ struct ExploreView: View {
             VStack(spacing: 16) {
                 searchBar
 
-                if isLoading {
+                if model.isLoading {
                     Spacer()
                     ProgressView("Searching...")
                         .progressViewStyle(.circular)
                     Spacer()
-                } else if let error = errorMessage {
+                } else if let error = model.errorMessage {
                     Spacer()
                     errorView(error)
                     Spacer()
-                } else if results.isEmpty && hasSearched {
+                } else if model.results.isEmpty && model.hasSearched {
                     Spacer()
                     emptyStateView
                     Spacer()
-                } else if !results.isEmpty {
+                } else if !model.results.isEmpty {
                     resultsGrid
                     paginationBar
                 } else {
@@ -73,15 +65,14 @@ struct ExploreView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
 
-                TextField("Search for exercises...", text: $searchText)
+                TextField("Search for exercises...", text: $model.searchText)
                     .textFieldStyle(.plain)
                     .submitLabel(.search)
-                    .onSubmit { performSearch(reset: true) }
+                    .onSubmit { Task { await model.performSearch() } }
 
-                if !searchText.isEmpty {
+                if !model.searchText.isEmpty {
                     Button {
-                        searchText = ""
-                        resetState()
+                        model.clearSearch()
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundStyle(.secondary)
@@ -93,13 +84,13 @@ struct ExploreView: View {
             .cornerRadius(12)
 
             Button {
-                performSearch(reset: true)
+                Task { await model.performSearch() }
             } label: {
                 Image(systemName: "arrow.right.circle.fill")
                     .font(.title2)
             }
             .buttonStyle(.borderedProminent)
-            .disabled(searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .disabled(model.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         }
         .padding(.horizontal, 16)
     }
@@ -108,7 +99,7 @@ struct ExploreView: View {
     private var resultsGrid: some View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: 16) {
-                ForEach(results) { exercise in
+                ForEach(model.results) { exercise in
                     Button {
                         selectedExercise = exercise
                     } label: {
@@ -138,27 +129,22 @@ struct ExploreView: View {
 
     // MARK: - Pagination
 
-    private var totalPages: Int {
-        guard totalResults > 0 else { return 1 }
-        return max(1, Int(ceil(Double(totalResults) / Double(pageSize))))
-    }
-
     private var paginationBar: some View {
         HStack {
             Button {
-                goToPreviousPage()
+                Task { await model.goToPreviousPage() }
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "chevron.left")
                     Text("Previous")
                 }
             }
-            .disabled(currentPage <= 1)
+            .disabled(model.currentPage <= 1)
 
             Spacer()
 
-            if totalResults > 0 {
-                Text("Page \(currentPage) of \(totalPages)")
+            if model.totalResults > 0 {
+                Text("Page \(model.currentPage) of \(model.totalPages)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -166,21 +152,20 @@ struct ExploreView: View {
             Spacer()
 
             Button {
-                goToNextPage()
+                Task { await model.goToNextPage() }
             } label: {
                 HStack(spacing: 6) {
                     Text("Next")
                     Image(systemName: "chevron.right")
                 }
             }
-            .disabled(!hasNextPage)
+            .disabled(!model.hasNextPage)
         }
         .font(.subheadline)
         .fontWeight(.medium)
         .padding(.horizontal, 24)
         .padding(.vertical, 10)
-        .background(.regularMaterial)
-        .cornerRadius(12)
+        .cardSurface(strokeColor: .clear, shadow: false)
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
     }
@@ -227,93 +212,12 @@ struct ExploreView: View {
                 .multilineTextAlignment(.center)
 
             Button("Try Again") {
-                let cursor = (currentPage - 1 < pageCursors.count) ? pageCursors[currentPage - 1] : nil
-                loadPage(currentPage, afterCursor: cursor)
+                Task { await model.retryCurrentPage() }
             }
             .buttonStyle(.borderedProminent)
             .padding(.top, 8)
         }
         .padding(.horizontal, 32)
-    }
-
-    // MARK: - Pagination Actions
-
-    private func goToNextPage() {
-        guard hasNextPage else { return }
-        let targetPage = currentPage + 1
-        guard targetPage - 1 < pageCursors.count else { return }
-        let cursor = pageCursors[targetPage - 1]
-        loadPage(targetPage, afterCursor: cursor)
-    }
-
-    private func goToPreviousPage() {
-        guard currentPage > 1 else { return }
-        let targetPage = currentPage - 1
-        let cursor = pageCursors[targetPage - 1]
-        loadPage(targetPage, afterCursor: cursor)
-    }
-
-    // MARK: - Search
-
-    private func loadPage(_ page: Int, afterCursor: String?) {
-        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-
-        isLoading = true
-        errorMessage = nil
-
-        Task {
-            do {
-                let result = try await apiClient.searchExercises(
-                    name: trimmed,
-                    limit: pageSize,
-                    after: afterCursor
-                )
-                await MainActor.run {
-                    results = result.exercises
-                    totalResults = result.total
-                    hasNextPage = result.hasNextPage
-                    currentPage = page
-
-                    if result.hasNextPage, let next = result.nextCursor {
-                        if pageCursors.count == page {
-                            pageCursors.append(next)
-                        } else if page < pageCursors.count {
-                            pageCursors[page] = next
-                        }
-                    }
-
-                    isLoading = false
-                }
-            } catch {
-                await MainActor.run {
-                    errorMessage = error.localizedDescription
-                    isLoading = false
-                }
-            }
-        }
-    }
-
-    private func performSearch(reset: Bool) {
-        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-
-        if reset {
-            resetState()
-        }
-
-        hasSearched = true
-        loadPage(1, afterCursor: nil)
-    }
-
-    private func resetState() {
-        results = []
-        hasSearched = false
-        errorMessage = nil
-        currentPage = 1
-        totalResults = 0
-        hasNextPage = false
-        pageCursors = [nil]
     }
 }
 
@@ -359,13 +263,7 @@ struct ExerciseCardView: View {
                 .frame(maxWidth: .infinity)
         }
         .padding(12)
-        .background(.regularMaterial)
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.gray.opacity(0.3), lineWidth: 1.5)
-        )
-        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+        .cardSurface()
     }
 }
 

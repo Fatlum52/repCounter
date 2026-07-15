@@ -1,12 +1,15 @@
 import SwiftUI
+import SwiftData
 import AVKit
 
 struct ExerciseExploreDetailView: View {
     let exercise: ExerciseDTO
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @State private var player: AVPlayer?
     @State private var fullExercise: ExerciseDTO?
     @State private var isLoadingDetails = false
+    @State private var addedToLibrary = false
 
     private let apiClient = ExerciseAPIClient()
 
@@ -21,6 +24,7 @@ struct ExerciseExploreDetailView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     mediaSection
+                    addToLibraryButton
                     infoSection
                     musclesSection
                     equipmentSection
@@ -30,6 +34,7 @@ struct ExerciseExploreDetailView: View {
             }
             .scrollIndicators(.hidden)
         }
+        .sensoryFeedback(.success, trigger: addedToLibrary)
         .navigationTitle(exercise.name.capitalized)
 #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
@@ -61,6 +66,26 @@ struct ExerciseExploreDetailView: View {
                 isLoadingDetails = false
             }
         }
+    }
+
+    // MARK: - Add to Library
+
+    private var addToLibraryButton: some View {
+        Button {
+            ExerciseTemplateStore.shared.definition(named: detail.name, in: modelContext)
+            addedToLibrary = true
+        } label: {
+            Label(
+                addedToLibrary ? "Added to Library" : "Add to Library",
+                systemImage: addedToLibrary ? "checkmark.circle.fill" : "plus.circle.fill"
+            )
+            .fontWeight(.semibold)
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(addedToLibrary ? .green : .accentColor)
+        .disabled(addedToLibrary)
+        .padding(.horizontal, 16)
     }
 
     // MARK: - Media
@@ -244,7 +269,7 @@ struct ExerciseExploreDetailView: View {
 
     private func infoRow<Content: View>(
         icon: String,
-        label: String,
+        label: LocalizedStringKey,
         color: Color,
         @ViewBuilder content: () -> Content
     ) -> some View {
