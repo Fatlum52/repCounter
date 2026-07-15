@@ -51,7 +51,14 @@ struct LibraryView: View {
     }
 
     private var totalExercisesAcrossSessions: Int {
-        sessionTemplates.reduce(0) { $0 + $1.exerciseNames.count }
+        sessionTemplates.reduce(0) { $0 + $1.exerciseDefinitionIDs.count }
+    }
+
+    /// Late ID→name mapping for the preview line (only ids are stored on the template).
+    private func exerciseNames(for template: SessionTemplate) -> [String] {
+        ExerciseTemplateStore.shared
+            .definitions(forIDs: template.exerciseDefinitionIDs, in: modelContext)
+            .map(\.name)
     }
 
     // MARK: - Exercise Templates Section
@@ -76,7 +83,7 @@ struct LibraryView: View {
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(.primary)
-                        Text("\(exerciseTemplates.count) template\(exerciseTemplates.count == 1 ? "" : "s")")
+                        Text("\(exerciseTemplates.count) templates")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -118,12 +125,7 @@ struct LibraryView: View {
                     .padding(.vertical, 12)
                 }
             }
-            .background(.regularMaterial)
-            .cornerRadius(16)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-            )
+            .cardSurface(cornerRadius: 16, strokeColor: .gray.opacity(0.2), lineWidth: 1, shadow: false)
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 16)
@@ -151,7 +153,7 @@ struct LibraryView: View {
                             .font(.subheadline)
                             .fontWeight(.semibold)
                             .foregroundStyle(.primary)
-                        Text("\(sessionTemplates.count) template\(sessionTemplates.count == 1 ? "" : "s")")
+                        Text("\(sessionTemplates.count) templates")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -182,8 +184,8 @@ struct LibraryView: View {
                                     Spacer()
                                 }
 
-                                if !template.exerciseNames.isEmpty {
-                                    Text(template.exerciseNames.prefix(3).joined(separator: " · "))
+                                if !template.exerciseDefinitionIDs.isEmpty {
+                                    Text(exerciseNames(for: template).prefix(3).joined(separator: " · "))
                                         .font(.caption2)
                                         .foregroundStyle(.tertiary)
                                         .lineLimit(1)
@@ -203,12 +205,7 @@ struct LibraryView: View {
                     .padding(.vertical, 12)
                 }
             }
-            .background(.regularMaterial)
-            .cornerRadius(16)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-            )
+            .cardSurface(cornerRadius: 16, strokeColor: .gray.opacity(0.2), lineWidth: 1, shadow: false)
         }
         .buttonStyle(.plain)
         .padding(.horizontal, 16)

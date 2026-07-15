@@ -14,17 +14,13 @@ struct ExerciseView: View {
 #endif
     
     // MARK: - State
-    @State private var newExerciseName: String = ""
     @State private var isEditorPresented: Bool = false
     @State private var editingExercise: Exercise? = nil
-    @State private var showTemplates: Bool = false
-    
-    // MARK: - Templates Query
-    @Query private var userTemplates: [ExerciseTemplate]
-    
+    @State private var showLibraryPicker: Bool = false
+
     // MARK: - Computed Properties
     private var sortedExercises: [Exercise] {
-        trainingSession.exercises.sorted(by: { $0.order > $1.order })
+        trainingSession.exerciseList.sorted(by: { $0.order < $1.order })
     }
     
     // MARK: - Body
@@ -51,12 +47,14 @@ struct ExerciseView: View {
                     )
                 }
             }
-            .sheet(isPresented: $showTemplates) {
+            .sheet(isPresented: $showLibraryPicker) {
                 NavigationStack {
-                    TemplateSheetView(
-                        templates: userTemplates.map { $0.name },
-                        title: "Exercise Templates",
-                        onSelect: { name in addExercise(named: name) }
+                    ExerciseLibraryPicker(
+                        onPick: { definition in
+                            SessionStore.shared.addExercise(definition, to: trainingSession, in: modelContext)
+                            showLibraryPicker = false
+                        },
+                        onCancel: { showLibraryPicker = false }
                     )
                 }
             }
@@ -70,7 +68,7 @@ struct ExerciseView: View {
             VStack(spacing: 0) {
                 addButtonSection
                 
-                if !trainingSession.exercises.isEmpty {
+                if !trainingSession.exerciseList.isEmpty {
                     exercisesList
                 } else {
                     emptyStateView
@@ -81,19 +79,14 @@ struct ExerciseView: View {
         }
     }
     
-    // MARK: - Add Button Section with Textfield
+    // MARK: - Add Button Section
     private var addButtonSection: some View {
-        InlineAddField(
-            menuTitle: "Add Exercise",
-            actionTitle: "New Exercise",
-            placeholder: "Name of the exercise",
-            text: $newExerciseName,
-            onAdd: addExercise,
-            onSelectFromLibrary: {
-                showTemplates = true
-            },
-            onCancel: { }
-        )
+        Button("Add Exercise", systemImage: "plus.circle") {
+            showLibraryPicker = true
+        }
+        .buttonStyle(.borderedProminent)
+        .tint(.green)
+        .foregroundStyle(.white)
     }
     
     // MARK: - Exercises List
@@ -118,20 +111,14 @@ struct ExerciseView: View {
                 } label: {
                     ExerciseCard(exercise: exercise)
                 }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button("Delete", systemImage: "trash", role: .destructive) {
-                        deleteExercise(exercise)
-                    }
-                    
-                    Button("Edit", systemImage: "pencil") {
+                .editDeleteSwipe(
+                    onEdit: {
                         editingExercise = exercise
                         isEditorPresented = true
-                    }
-                    .tint(.blue)
-                }
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                .listRowBackground(Color.clear)
+                    },
+                    onDelete: { deleteExercise(exercise) }
+                )
+                .cardListRow()
             }
         }
         .listStyle(.plain)
@@ -168,34 +155,12 @@ struct ExerciseView: View {
     
     // MARK: - Empty State
     private var emptyStateView: some View {
-        Text("No exercises yet")
-            .foregroundStyle(.secondary)
-            .padding(.top, 3)
-    }
-    
-    // MARK: - Templates
-    private var allTemplates: [String] {
-        // Defaults (hardcoded) + User-Templates (aus SwiftData)
-        let defaults = ExerciseTemplateStore.defaultTemplateNames
-        let userNames = userTemplates.map { $0.name }
-        return defaults + userNames
+        EmptyStateView("No exercises yet")
     }
     
     // MARK: - Helper functions
-    private func addExercise(named name: String) {
-        let finalName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !finalName.isEmpty else { return }
-        
-        let newExercise = Exercise(finalName)
-        newExercise.order = trainingSession.exercises.count  // Set order based on current count
-        modelContext.insert(newExercise)
-        trainingSession.exercises.append(newExercise)
-    }
-    
     private func deleteExercise(_ exercise: Exercise) {
-        FileManagerHelper.deleteMediaFiles(for: exercise)
-        trainingSession.exercises.removeAll { $0.id == exercise.id }
-        modelContext.delete(exercise)
+        SessionStore.shared.remove(exercise, in: modelContext)
     }
     
     private func cancelEdit() {
@@ -215,8 +180,8 @@ struct ExerciseView: View {
     
     let session = Session(name: "Push Day")
     let exercise = Exercise("Bench Press")
-    session.exercises.append(exercise)
-    
+    exercise.session = session
+
     container.mainContext.insert(session)
     container.mainContext.insert(exercise)
     

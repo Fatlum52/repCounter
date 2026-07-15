@@ -139,8 +139,8 @@ struct SessionView: View {
                     Text(training.formattedDate)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    if !training.exercises.isEmpty {
-                        Text("\(training.exercises.count) exercises")
+                    if !training.exerciseList.isEmpty {
+                        Text("\(training.exerciseList.count) exercises")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
@@ -176,21 +176,15 @@ struct SessionView: View {
                 } label: {
                     SessionCard(trainingSession: training)
                 }
-                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                    Button("Delete", systemImage: "trash", role: .destructive) {
-                        deleteSession(training)
-                    }
-                    
-                    Button("Edit", systemImage: "pencil") {
+                .editDeleteSwipe(
+                    onEdit: {
                         editingSession = training
                         editingName = training.name
                         isEditorPresented = true
-                    }
-                    .tint(.blue)
-                }
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                .listRowBackground(Color.clear)
+                    },
+                    onDelete: { deleteSession(training) }
+                )
+                .cardListRow()
             }
         }
         .listStyle(.plain)
@@ -201,45 +195,27 @@ struct SessionView: View {
     
     // MARK: - Empty State
     private var emptyStateView: some View {
-        Text("No trainings yet")
-            .foregroundStyle(.secondary)
-            .padding(.top, 3)
+        EmptyStateView("No trainings yet")
     }
     
     // MARK: - Helper Functions
     private func addSession(named name: String) {
-        let finalName = name.isEmpty ? "Training Session" : name
-        
-        // Find the SessionTemplate by name
+        // Picked from a template → build session from its definitions;
+        // otherwise create an empty (optionally named) session. Both go through the store.
         if let template = userTemplates.first(where: { $0.name == name }) {
-            // Create session from template with exercises
-            let newTraining = Session(name: finalName)
-            modelContext.insert(newTraining)
-            
-            // Create exercises from template
-            for exerciseName in template.exerciseNames {
-                let newExercise = Exercise(exerciseName)
-                newExercise.order = newTraining.exercises.count
-                modelContext.insert(newExercise)
-                newTraining.exercises.append(newExercise)
-            }
+            SessionStore.shared.createSession(from: template, in: modelContext)
         } else {
-            // Create session without template (manual creation)
-            let newTraining = Session(name: finalName)
-            modelContext.insert(newTraining)
+            let finalName = name.isEmpty ? "Training Session" : name
+            SessionStore.shared.createSession(name: finalName, in: modelContext)
         }
     }
 
-
     private func deleteSession(_ session: Session) {
-        // Delete all media files for the exercises
-        FileManagerHelper.deleteMediaFiles(for: session)
-        
         // If the deleted session is currently selected, reset the selection
         if selectedSession?.id == session.id {
             selectedSession = nil
         }
-        modelContext.delete(session)
+        SessionStore.shared.remove(session, in: modelContext)
     }
 
     private func cancelEdit() {

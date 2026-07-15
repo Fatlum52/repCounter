@@ -113,19 +113,11 @@ struct ExerciseTemplatesView: View {
         List {
             ForEach(exerciseTemplates) { template in
                 templateRow(template)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button("Delete", systemImage: "trash", role: .destructive) {
-                            deleteTemplate(template)
-                        }
-                        
-                        Button("Edit", systemImage: "pencil") {
-                            editTemplate(template)
-                        }
-                        .tint(.blue)
-                    }
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                    .listRowBackground(Color.clear)
+                    .editDeleteSwipe(
+                        onEdit: { editTemplate(template) },
+                        onDelete: { deleteTemplate(template) }
+                    )
+                    .cardListRow()
             }
         }
         .listStyle(.plain)
@@ -145,9 +137,7 @@ struct ExerciseTemplatesView: View {
     
     // MARK: - Empty State
     private var emptyStateView: some View {
-        Text("No exercise templates yet")
-            .foregroundStyle(.secondary)
-            .padding(.top, 3)
+        EmptyStateView("No exercise templates yet")
     }
     
     // MARK: - Helper Functions

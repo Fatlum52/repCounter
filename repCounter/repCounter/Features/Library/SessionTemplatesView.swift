@@ -2,36 +2,36 @@ import SwiftUI
 import SwiftData
 
 struct SessionTemplatesView: View {
-    
+
     // MARK: - Environment & Data
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var sessionTemplates: [SessionTemplate]
     @Query private var exerciseTemplates: [ExerciseTemplate]
-    
+
     // MARK: - State
     @State private var newTemplateName: String = ""
     @State private var showSessionSheet: Bool = false
     @State private var editingTemplate: SessionTemplate?
     @State private var editingName: String = ""
-    @State private var editingExerciseNames: [String] = []
+    @State private var editingDefinitionIDs: [UUID] = []
     @State private var showExerciseTemplatePicker: Bool = false
-    
+
     var body: some View {
         ZStack {
             Background()
-            
+
             VStack {
                 // Add Button Section
                 addButtonSection
-                
+
                 // Templates List
                 if !sessionTemplates.isEmpty {
                     templatesList
                 } else {
                     emptyStateView
                 }
-                
+
                 Spacer()
             }
         }
@@ -49,7 +49,7 @@ struct SessionTemplatesView: View {
             sessionSheetContent
         }
     }
-    
+
     // MARK: - Add Button Section
     private var addButtonSection: some View {
         VStack {
@@ -67,7 +67,7 @@ struct SessionTemplatesView: View {
             )
         }
     }
-    
+
     // MARK: - Templates List
     private var templatesList: some View {
 #if os(macOS)
@@ -80,7 +80,7 @@ struct SessionTemplatesView: View {
                         } label: {
                             Label("Edit", systemImage: "pencil")
                         }
-                        
+
                         Button(role: .destructive) {
                             deleteTemplate(template)
                         } label: {
@@ -94,20 +94,14 @@ struct SessionTemplatesView: View {
 #else
         List {
             ForEach(sessionTemplates) { template in
-                templateRow(template)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button("Delete", systemImage: "trash", role: .destructive) {
-                            deleteTemplate(template)
-                        }
-                        
-                        Button("Edit", systemImage: "pencil") {
-                            editTemplate(template)
-                        }
-                        .tint(.blue)
-                    }
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                    .listRowBackground(Color.clear)
+                Button {
+                    editTemplate(template)
+                } label: {
+                    templateRow(template)
+                }
+                .buttonStyle(.plain)
+                .editDeleteSwipe(onDelete: { deleteTemplate(template) })
+                .cardListRow()
             }
         }
         .listStyle(.plain)
@@ -115,7 +109,7 @@ struct SessionTemplatesView: View {
         .background(Color.clear)
 #endif
     }
-    
+
     // MARK: - Template Row
     @ViewBuilder
     private func templateRow(_ template: SessionTemplate) -> some View {
@@ -123,28 +117,34 @@ struct SessionTemplatesView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(template.name)
                     .font(.headline)
-                
-                if !template.exerciseNames.isEmpty {
-                    Text("\(template.exerciseNames.count) exercises")
+
+                if !template.exerciseDefinitionIDs.isEmpty {
+                    Text("\(template.exerciseDefinitionIDs.count) exercises")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
         }
     }
-    
+
     // MARK: - Empty State
     private var emptyStateView: some View {
-        Text("No session templates yet")
-            .foregroundStyle(.secondary)
-            .padding(.top, 3)
+        EmptyStateView("No session templates yet")
     }
-    
+
     // MARK: - Session Sheet Content
     @ViewBuilder
     private var sessionSheetContent: some View {
         if showExerciseTemplatePicker {
-            exerciseTemplatePicker
+            NavigationStack {
+                ExerciseLibraryPicker(
+                    onPick: { definition in
+                        editingDefinitionIDs.append(definition.id)
+                        showExerciseTemplatePicker = false
+                    },
+                    onCancel: { showExerciseTemplatePicker = false }
+                )
+            }
         } else {
             NavigationStack {
                 ZStack {
@@ -177,78 +177,6 @@ struct SessionTemplatesView: View {
         }
     }
 
-    /// Picker as sheet
-    @ViewBuilder
-    private var exerciseTemplatePicker: some View {
-        ZStack {
-            Group {
-#if os(iOS)
-                Color(uiColor: .systemBackground)
-#elseif os(macOS)
-                Color(nsColor: .windowBackgroundColor)
-#endif
-            }
-            .ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Text("Select Exercise Templates")
-                        .font(.headline)
-                    Spacer()
-                    Button("Done") {
-                        showExerciseTemplatePicker = false
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-
-                Divider()
-
-                // list of exercises to pick
-                ScrollView {
-                    VStack(spacing: 8) {
-                        ForEach(exerciseTemplates) { template in
-                            Button {
-                                if !editingExerciseNames.contains(template.name) {
-                                    editingExerciseNames.append(template.name)
-                                }
-                                showExerciseTemplatePicker = false
-                            } label: {
-                                CardStyle {
-                                    Text(template.name)
-                                        .font(.headline)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 24)
-                    .padding(.bottom, 24)
-                }
-                .scrollIndicators(.visible)
-
-                Divider()
-
-                // footer
-                Button("Close") {
-                    showExerciseTemplatePicker = false
-                }
-                .buttonStyle(.bordered)
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-#if os(iOS)
-            .background(Color(uiColor: .systemBackground))
-#elseif os(macOS)
-            .background(Color(nsColor: .windowBackgroundColor))
-#endif
-        }
-    }
-    
     // MARK: - Session Edit View
     private var sessionEditView: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -259,24 +187,21 @@ struct SessionTemplatesView: View {
                 TextField("Session name", text: $editingName)
                     .textFieldStyle(.roundedBorder)
             }
-            
-            // Exercises
+
+            // Exercises (resolved from definition ids, in stored order)
             VStack(alignment: .leading, spacing: 12) {
                 Text("Exercises")
                     .font(.headline)
-                
+
                 ScrollView {
                     VStack(spacing: 8) {
-                        ForEach(Array(editingExerciseNames.enumerated()), id: \.offset) { index, exerciseName in
+                        ForEach(Array(editingDefinitionIDs.enumerated()), id: \.offset) { index, id in
                             HStack {
-                                TextField("Exercise name", text: Binding(
-                                    get: { editingExerciseNames[index] },
-                                    set: { editingExerciseNames[index] = $0 }
-                                ))
-                                .textFieldStyle(.roundedBorder)
-                                
+                                Text(name(forDefinitionID: id))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+
                                 Button(role: .destructive) {
-                                    editingExerciseNames.remove(at: index)
+                                    editingDefinitionIDs.remove(at: index)
                                 } label: {
                                     Image(systemName: "trash")
                                 }
@@ -286,77 +211,64 @@ struct SessionTemplatesView: View {
                     }
                 }
                 .frame(maxHeight: 300)
-                
-                HStack {
-                    Button("Add Exercise", systemImage: "plus") {
-                        editingExerciseNames.append("")
-                    }
-                    .buttonStyle(.bordered)
-                    
-                    Button {
-                        showExerciseTemplatePicker = true
-                    } label: {
-                        HStack(alignment: .center, spacing: 8) {
-                            Image(systemName: "list.bullet")
-                                .frame(width: 20, alignment: .center)
-                            
-                            Text("Add from Templates")
-                                .lineLimit(2)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    .buttonStyle(.bordered)
+
+                Button("Add Exercise", systemImage: "plus") {
+                    showExerciseTemplatePicker = true
                 }
+                .buttonStyle(.bordered)
             }
         }
     }
-    
+
     // MARK: - Helper Functions
     private var hasUnsavedChangesInInlineField: Bool {
         !newTemplateName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
-    
+
+    private func name(forDefinitionID id: UUID) -> String {
+        exerciseTemplates.first { $0.id == id }?.name ?? "(deleted)"
+    }
+
     private func dismissSessionSheet() {
         showSessionSheet = false
         editingTemplate = nil
         editingName = ""
-        editingExerciseNames = []
+        editingDefinitionIDs = []
     }
-    
+
     private func addTemplate(name: String) {
         let finalName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !finalName.isEmpty else { return }
         editingTemplate = nil
         editingName = finalName
-        editingExerciseNames = []
+        editingDefinitionIDs = []
         showSessionSheet = true
     }
-    
+
     private func editTemplate(_ template: SessionTemplate) {
         editingTemplate = template
         editingName = template.name
-        editingExerciseNames = template.exerciseNames
+        editingDefinitionIDs = template.exerciseDefinitionIDs
         showSessionSheet = true
     }
-    
+
     private func saveEdit() {
         if let template = editingTemplate {
             template.name = editingName
-            template.exerciseNames = editingExerciseNames.filter { !$0.isEmpty }
+            template.exerciseDefinitionIDs = editingDefinitionIDs
         }
         dismissSessionSheet()
     }
-    
+
     private func saveAdd() {
-        let filteredExercises = editingExerciseNames.filter { !$0.isEmpty }
         SessionTemplateStore.shared.addTemplate(
             name: editingName,
-            exercises: filteredExercises,
+            exerciseDefinitionIDs: editingDefinitionIDs,
             in: modelContext
         )
         dismissSessionSheet()
     }
-    
+
     private func deleteTemplate(_ template: SessionTemplate) {
         SessionTemplateStore.shared.removeTemplate(template, in: modelContext)
     }

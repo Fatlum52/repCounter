@@ -6,7 +6,7 @@ struct SessionCard: View {
     let trainingSession: Session
     
     var body: some View {
-        CardStyle {
+        CardStyle(isHighlighted: trainingSession.isToday) {
             VStack(alignment: .leading, spacing: 12) {
                 // Header: Name and Date
                 HStack {
@@ -20,9 +20,10 @@ struct SessionCard: View {
                 }
                 
                 // Exercises List
-                if !trainingSession.exercises.isEmpty {
+                let exercises = trainingSession.exerciseList.sorted(by: { $0.order < $1.order })
+                if !exercises.isEmpty {
                     VStack(alignment: .leading) {
-                        ForEach(Array(trainingSession.exercises.sorted(by: { $0.order > $1.order }).enumerated()), id: \.element.id) { index, exercise in
+                        ForEach(Array(exercises.enumerated()), id: \.element.id) { index, exercise in
                             VStack(alignment: .leading) {
                                 HStack {
                                     Text(exercise.name)
@@ -32,8 +33,8 @@ struct SessionCard: View {
                                         .font(.subheadline)
                                         .foregroundStyle(.secondary)
                                 }
-                                
-                                if index < trainingSession.exercises.count - 1 {
+
+                                if index < exercises.count - 1 {
                                     Divider()
                                 }
                             }
