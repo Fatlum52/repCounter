@@ -5,14 +5,16 @@ final class SessionTemplateStore {
 
     static let shared = SessionTemplateStore()
     private init() {}
-    
+
+    @discardableResult
     func addTemplate(
         name: String,
-        exercises: [String],
+        exerciseDefinitionIDs: [UUID] = [],
         in context: ModelContext
-    ) {
-        let template = SessionTemplate(name: name, exerciseNames: exercises)
+    ) -> SessionTemplate {
+        let template = SessionTemplate(name: name, exerciseDefinitionIDs: exerciseDefinitionIDs)
         context.insert(template)
+        return template
     }
 
     func removeTemplate(_ template: SessionTemplate, in context: ModelContext) {

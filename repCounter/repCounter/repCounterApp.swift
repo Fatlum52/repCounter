@@ -10,7 +10,9 @@ import SwiftData
 
 @main
 struct repCounterApp: App {
-    
+
+    @AppStorage("appLanguage") private var appLanguage = AppLanguage.system.rawValue
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Session.self,
@@ -45,7 +47,16 @@ struct repCounterApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            let language = AppLanguage(rawValue: appLanguage) ?? .system
+            Group {
+                if let locale = language.locale {
+                    MainTabView()
+                        .environment(\.locale, locale)
+                } else {
+                    MainTabView()
+                }
+            }
+            .id(appLanguage) // rebuild the tree so a language switch applies immediately
         }
         .modelContainer(sharedModelContainer)
     }

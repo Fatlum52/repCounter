@@ -3,31 +3,25 @@ import SwiftData
 
 @Model
 final class Session: Identifiable {
-    var id           = UUID()
-    var date         = Date()
-    var name: String = "Training vom "
-    @Relationship(deleteRule: .cascade)
-    var exercises: [Exercise] = []
-    
-    init(name: String) {
+    var id: UUID = UUID()
+    var date: Date = Date()
+    var name: String = ""
+    @Relationship(deleteRule: .cascade, inverse: \Exercise.session)
+    var exercises: [Exercise]?
+
+    init(name: String, date: Date = .now) {
         self.name = name
-        self.date = Date()
-        self.exercises = []
+        self.date = date
     }
-    
-    init(_ name: String, _ exercises: [Exercise]) {
-        self.name = name
-        self.date = Date()
-        self.exercises = exercises
-    }
-    
+
+    /// Non-optional accessor for the CloudKit-optional relationship.
+    var exerciseList: [Exercise] { exercises ?? [] }
+
+    var isToday: Bool { Calendar.current.isDateInToday(date) }
+
     var formattedDate: String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "E, d MMM y"
         return dateFormatter.string(from: date)
-    }
-    
-    func getFormattedDate() -> String {
-        return formattedDate
     }
 }

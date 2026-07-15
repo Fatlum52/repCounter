@@ -4,12 +4,15 @@ import SwiftData
 @Model
 final class Exercise: Identifiable {
     var id: UUID = UUID()
-    var name: String
+    var name: String = ""
     var order: Int = 0  // Order within the training session
     var sets: [ExerciseSet] = []
     var notes: String = ""
     var mediaItems: [MediaItem] = [] // images or videos within exercise
-    
+    var session: Session?
+    @Relationship(deleteRule: .nullify)
+    var definition: ExerciseTemplate?
+
     init(_ name: String) {
         self.name = name
     }
@@ -18,19 +21,19 @@ final class Exercise: Identifiable {
         var id: UUID = UUID()
         var name: String
         var reps: Int = 0
-        var weight: Int = 0
-        
+        var weight: Double = 0
+
         init(_ name: String) {
             self.name = name
         }
     }
-    
+
     struct MediaItem: Identifiable, Codable {
         var id: UUID = UUID()
         var fileName: String
         var fileType: MediaType
         var createdAt: Date = Date()
-        
+
         enum MediaType: String, Codable {
             case image, video
         }
@@ -40,8 +43,12 @@ final class Exercise: Identifiable {
         sets.reduce(0) { $0 + $1.reps }
     }
 
-    var totalWeight: Int {
-        sets.reduce(0) { $0 + ($1.weight * max($1.reps, 1)) }
+    var totalWeight: Double {
+        sets.reduce(0) { $0 + ($1.weight * Double(max($1.reps, 1))) }
+    }
+
+    /// Heaviest single set (0 if there are no sets).
+    var bestSetWeight: Double {
+        sets.map(\.weight).max() ?? 0
     }
 }
-
