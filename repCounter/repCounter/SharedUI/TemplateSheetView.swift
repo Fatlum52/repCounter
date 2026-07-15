@@ -4,7 +4,7 @@ import SwiftData
 struct TemplateSheetView: View {
     
     let templates: [String]  // Template names only (for selection)
-    let title: String
+    let title: LocalizedStringKey
     let onSelect: (String) -> Void
     
     @Environment(\.dismiss) private var dismiss
@@ -22,9 +22,7 @@ struct TemplateSheetView: View {
                     }
                 }
                 .buttonStyle(.plain)
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                .listRowBackground(Color.clear)
+                .cardListRow()
             }
         }
         .listStyle(.plain)

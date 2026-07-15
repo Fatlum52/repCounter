@@ -2,7 +2,7 @@ import SwiftUI
 
 struct NameEditOverlay: View {
     
-    let title: String
+    let title: LocalizedStringKey
     var onCancel: () -> Void
     var onSave:   ()   -> Void
     @Binding var isPresented: Bool

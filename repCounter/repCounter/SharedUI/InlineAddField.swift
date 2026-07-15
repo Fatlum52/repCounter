@@ -3,9 +3,9 @@ import SwiftUI
 struct InlineAddField: View {
     
     // config
-    let menuTitle:String
-    let actionTitle:String
-    let placeholder:String
+    let menuTitle:LocalizedStringKey
+    let actionTitle:LocalizedStringKey
+    let placeholder:LocalizedStringKey
     
     // data
     @Binding var text:String
