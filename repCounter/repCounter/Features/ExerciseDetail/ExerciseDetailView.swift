@@ -29,6 +29,7 @@ struct ExerciseDetailView: View {
                 VStack(spacing: 20) {
                     statsHeader
                     setsSection
+                    lastPerformedSection
                     notesSection
                     mediaSection
                 }
@@ -74,8 +75,8 @@ struct ExerciseDetailView: View {
     private var statsHeader: some View {
         HStack(spacing: 16) {
             StatBadge(value: "\(exercise.sets.count)", label: "Sets", icon: "number")
-            StatBadge(value: "\(exercise.totalReps)", label: "Total Reps", icon: "flame.fill")
-            StatBadge(value: "\(exercise.totalWeight) kg", label: "Volume", icon: "scalemass.fill")
+            StatBadge(value: "\(exercise.totalReps)", label: "Total Reps", icon: "flame.fill", color: .orange)
+            StatBadge(value: "\(exercise.totalWeight.formatted(.number.precision(.fractionLength(0...2)))) kg", label: "Volume", icon: "scalemass.fill")
         }
         .padding(.horizontal, 16)
     }
@@ -156,9 +157,9 @@ struct ExerciseDetailView: View {
             Spacer()
 
             // Weight input
-            TextField("0", value: setBinding(for: set.id, keyPath: \.weight), format: .number)
+            TextField("0", value: weightBinding(for: set.id), format: .number.precision(.fractionLength(0...2)))
 #if os(iOS)
-                .keyboardType(.numberPad)
+                .keyboardType(.decimalPad)
                 .focused($focusedField, equals: .weight(set.id))
 #endif
                 .multilineTextAlignment(.center)
@@ -171,7 +172,7 @@ struct ExerciseDetailView: View {
             Spacer()
 
             // Reps input
-            TextField("0", value: setBinding(for: set.id, keyPath: \.reps), format: .number)
+            TextField("0", value: repsBinding(for: set.id), format: .number)
 #if os(iOS)
                 .keyboardType(.numberPad)
                 .focused($focusedField, equals: .reps(set.id))
@@ -198,6 +199,34 @@ struct ExerciseDetailView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 10)
+    }
+
+    // MARK: - Last Performed (read-only)
+
+    @ViewBuilder
+    private var lastPerformedSection: some View {
+        let summary = exercise.definition?.lastPerformedSummary ?? ""
+        if !summary.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 10) {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                    Text("Last time")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                }
+
+                Text(summary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
+            }
+            .padding(16)
+            .cardSurface(cornerRadius: 16, strokeColor: .gray.opacity(0.2), lineWidth: 1, shadow: false)
+            .padding(.horizontal, 16)
+        }
     }
 
     // MARK: - Notes Section
@@ -282,7 +311,7 @@ struct ExerciseDetailView: View {
                                 .font(.subheadline)
                                 .fontWeight(.semibold)
                                 .foregroundStyle(.primary)
-                            Text("\(exercise.mediaItems.count) item\(exercise.mediaItems.count == 1 ? "" : "s")")
+                            Text("\(exercise.mediaItems.count) items")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -343,19 +372,31 @@ struct ExerciseDetailView: View {
     }
 
     // MARK: - Data Helpers
-    private func setBinding(
-        for id: Exercise.ExerciseSet.ID,
-        keyPath: WritableKeyPath<Exercise.ExerciseSet, Int>
-    ) -> Binding<Int> {
+    private func repsBinding(for id: Exercise.ExerciseSet.ID) -> Binding<Int> {
         Binding(
-            get: { exercise.sets.first { $0.id == id }?[keyPath: keyPath] ?? 0 },
+            get: { exercise.sets.first { $0.id == id }?.reps ?? 0 },
             set: { newValue in
-                guard let idx = exercise.sets.firstIndex(where: { $0.id == id }) else { return }
-                var copy = exercise.sets
-                copy[idx][keyPath: keyPath] = newValue
-                exercise.sets = copy
+                updateSet(id: id) { $0.reps = max(0, newValue) }
             }
         )
+    }
+
+    private func weightBinding(for id: Exercise.ExerciseSet.ID) -> Binding<Double> {
+        Binding(
+            get: { exercise.sets.first { $0.id == id }?.weight ?? 0 },
+            set: { newValue in
+                // Clamp to non-negative and cap at 2 decimal places.
+                let rounded = (max(0, newValue) * 100).rounded() / 100
+                updateSet(id: id) { $0.weight = rounded }
+            }
+        )
+    }
+
+    private func updateSet(id: Exercise.ExerciseSet.ID, _ mutate: (inout Exercise.ExerciseSet) -> Void) {
+        guard let idx = exercise.sets.firstIndex(where: { $0.id == id }) else { return }
+        var copy = exercise.sets
+        mutate(&copy[idx])
+        exercise.sets = copy
     }
 
     @discardableResult
