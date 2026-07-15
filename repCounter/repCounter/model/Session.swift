@@ -20,8 +20,6 @@ final class Session: Identifiable {
     var isToday: Bool { Calendar.current.isDateInToday(date) }
 
     var formattedDate: String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "E, d MMM y"
-        return dateFormatter.string(from: date)
+        date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).year())
     }
 }

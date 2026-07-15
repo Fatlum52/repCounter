@@ -118,7 +118,8 @@ struct ExerciseDetailView: View {
                 withAnimation(.spring(duration: 0.3)) {
                     if let newID = addSet() {
 #if os(iOS)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(150))
                             focusedField = .reps(newID)
                         }
 #endif

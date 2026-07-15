@@ -1,4 +1,5 @@
 import SwiftUI
+import os
 #if os(iOS)
 import UIKit
 import AVKit
@@ -8,6 +9,8 @@ import AppKit
 import AVKit
 import AVFoundation
 #endif
+
+private let galleryLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "repCounter", category: "MediaGallery")
 
 struct MediaGalleryView: View {
     @Bindable var exercise: Exercise
@@ -177,7 +180,7 @@ struct VideoThumbnailView: View {
                 }
 #endif
             } catch {
-                print("Error generating thumbnail: \(error)")
+                galleryLogger.error("Error generating thumbnail: \(error.localizedDescription)")
             }
         }
     }

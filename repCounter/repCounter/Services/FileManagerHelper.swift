@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import os
 #if os(iOS)
 import UIKit
 import AVFoundation
@@ -8,8 +9,10 @@ import AppKit
 import AVFoundation
 #endif
 
-// helper class for photo, video handling
-class FileManagerHelper {
+// Namespace for photo/video file handling.
+enum FileManagerHelper {
+
+    private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "repCounter", category: "FileManager")
 
     // MARK: - Documents Directory
     // documents directory of the app
@@ -33,7 +36,7 @@ class FileManagerHelper {
                     try data.write(to: url)
                     continuation.resume(returning: url)
                 } catch {
-                    print("Error saving image: \(error)")
+                    logger.error("Error saving image: \(error.localizedDescription)")
                     continuation.resume(returning: nil)
                 }
             }
@@ -68,7 +71,7 @@ class FileManagerHelper {
                     try data.write(to: url)
                     continuation.resume(returning: url)
                 } catch {
-                    print("Error saving image: \(error)")
+                    logger.error("Error saving image: \(error.localizedDescription)")
                     continuation.resume(returning: nil)
                 }
             }
@@ -146,44 +149,10 @@ class FileManagerHelper {
 
             return destinationURL
         } catch {
-            print("Video export failed: \(error)")
+            logger.error("Video export failed: \(error.localizedDescription)")
             return await copyVideoFallback(
                 sourceURL: sourceURL,
                 destinationURL: destinationURL
-            )
-        }
-    }
-
-    // calculates scaled video-size with ration aspect
-    private static func calculateOptimalSize(
-        for track: AVAssetTrack,
-        maxDimension: CGFloat
-    ) async -> CGSize {
-
-        guard let naturalSize = try? await track.load(.naturalSize),
-              let transform = try? await track.load(.preferredTransform) else {
-            return CGSize(width: maxDimension, height: maxDimension)
-        }
-
-        let size = naturalSize.applying(transform)
-        let width = abs(size.width)
-        let height = abs(size.height)
-
-        if width <= maxDimension && height <= maxDimension {
-            return CGSize(width: width, height: height)
-        }
-
-        let aspectRatio = width / height
-
-        if width > height {
-            return CGSize(
-                width: maxDimension,
-                height: maxDimension / aspectRatio
-            )
-        } else {
-            return CGSize(
-                width: maxDimension * aspectRatio,
-                height: maxDimension
             )
         }
     }
@@ -197,7 +166,7 @@ class FileManagerHelper {
             try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
             return destinationURL
         } catch {
-            print("Error copying video: \(error)")
+            logger.error("Error copying video: \(error.localizedDescription)")
             return nil
         }
     }
