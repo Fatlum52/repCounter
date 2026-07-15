@@ -68,3 +68,4 @@ fastlane/test_output
 # Internal planning docs (not tracked)
 docs/IMPLEMENTATION_PLAN(1).md
 docs/progress.md
+docs/CLOUDKIT_SETUP.md
