@@ -65,9 +65,11 @@ struct ExerciseDetailView: View {
 #endif
         .sheet(isPresented: $showMediaGallery) {
             MediaGalleryView(exercise: exercise)
+                .appLanguageLocale()
         }
         .sheet(isPresented: $showNotesSheet) {
             NotesSheetView(notes: $exercise.notes)
+                .appLanguageLocale()
         }
     }
 

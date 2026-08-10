@@ -32,11 +32,13 @@ struct LibraryView: View {
             NavigationStack {
                 ExerciseTemplatesView()
             }
+            .appLanguageLocale()
         }
         .sheet(isPresented: $showSessionSheet) {
             NavigationStack {
                 SessionTemplatesView()
             }
+            .appLanguageLocale()
         }
     }
 

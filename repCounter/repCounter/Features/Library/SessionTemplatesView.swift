@@ -47,6 +47,7 @@ struct SessionTemplatesView: View {
         .interactiveDismissDisabled(hasUnsavedChangesInInlineField)
         .sheet(isPresented: $showSessionSheet) {
             sessionSheetContent
+                .appLanguageLocale()
         }
     }
 

@@ -101,6 +101,7 @@ struct SessionView: View {
                     onSelect: addSession(named:)
                 )
             }
+            .appLanguageLocale()
         }
     }
     

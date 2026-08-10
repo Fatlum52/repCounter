@@ -121,6 +121,7 @@ struct ExploreView: View {
                         }
                     }
             }
+            .appLanguageLocale()
 #if os(macOS)
             .frame(minWidth: 550, idealWidth: 650, maxWidth: 750, minHeight: 450, idealHeight: 550, maxHeight: 700)
 #endif

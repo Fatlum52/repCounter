@@ -88,6 +88,7 @@ struct MediaGalleryView: View {
             }
             .sheet(item: $selectedMediaItem) { item in
                 FullscreenMediaView(mediaItem: item)
+                    .appLanguageLocale()
             }
         }
     }

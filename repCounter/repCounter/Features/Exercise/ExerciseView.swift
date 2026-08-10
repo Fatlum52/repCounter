@@ -57,9 +57,10 @@ struct ExerciseView: View {
                         onCancel: { showLibraryPicker = false }
                     )
                 }
+                .appLanguageLocale()
             }
     }
-    
+
     // MARK: - Exercise List Content
     private var exerciseListContent: some View {
         ZStack {
