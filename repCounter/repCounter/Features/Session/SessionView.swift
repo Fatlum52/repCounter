@@ -230,6 +230,7 @@ struct SessionView: View {
             return
         }
         session.name = editingName
+        modelContext.saveIfNeeded()
         cancelEdit()
     }
 }

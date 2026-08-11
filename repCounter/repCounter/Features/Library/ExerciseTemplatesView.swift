@@ -54,6 +54,7 @@ struct ExerciseTemplatesView: View {
                     if let template = editingTemplate {
                         // Edit existing
                         template.name = editingName
+                        modelContext.saveIfNeeded()
                     } else {
                         // Create new
                         ExerciseTemplateStore.shared.addTemplate(name: editingName, in: modelContext)

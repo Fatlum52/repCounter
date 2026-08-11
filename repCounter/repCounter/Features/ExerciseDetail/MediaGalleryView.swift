@@ -14,6 +14,7 @@ private let galleryLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "r
 
 struct MediaGalleryView: View {
     @Bindable var exercise: Exercise
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var selectedMediaItem: Exercise.MediaItem?
     
@@ -96,6 +97,7 @@ struct MediaGalleryView: View {
     private func deleteMedia(_ item: Exercise.MediaItem) {
         FileManagerHelper.deleteFileFromDocuments(fileName: item.fileName)
         exercise.mediaItems.removeAll { $0.id == item.id }
+        modelContext.saveIfNeeded()
     }
 }
 

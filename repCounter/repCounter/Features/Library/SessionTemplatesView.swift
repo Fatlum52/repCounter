@@ -257,6 +257,7 @@ struct SessionTemplatesView: View {
         if let template = editingTemplate {
             template.name = editingName
             template.exerciseDefinitionIDs = editingDefinitionIDs
+            modelContext.saveIfNeeded()
         }
         dismissSessionSheet()
     }

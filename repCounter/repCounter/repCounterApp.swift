@@ -46,7 +46,6 @@ struct repCounterApp: App {
                 for defaultName in ExerciseTemplateStore.defaultTemplateNames.reversed() {
                     ExerciseTemplateStore.shared.addTemplate(name: defaultName, in: context)
                 }
-                try context.save()
             }
 
             // Merge duplicates a previous launch synced in (see `deduplicate`).

@@ -10,6 +10,8 @@ import UniformTypeIdentifiers
 struct ExerciseDetailView: View {
 
     @Bindable var exercise: Exercise
+    // Not private: the media-import extension lives in another file.
+    @Environment(\.modelContext) var modelContext
     @FocusState private var focusedField: SetFocusField?
 
 #if os(iOS)
@@ -67,10 +69,16 @@ struct ExerciseDetailView: View {
             MediaGalleryView(exercise: exercise)
                 .appLanguageLocale()
         }
-        .sheet(isPresented: $showNotesSheet) {
+        .sheet(isPresented: $showNotesSheet, onDismiss: { modelContext.saveIfNeeded() }) {
             NotesSheetView(notes: $exercise.notes)
                 .appLanguageLocale()
         }
+        // Typing writes straight into the model, so persist once the edit is done rather
+        // than on every keystroke.
+        .onChange(of: focusedField) { _, newValue in
+            if newValue == nil { modelContext.saveIfNeeded() }
+        }
+        .onDisappear { modelContext.saveIfNeeded() }
     }
 
     // MARK: - Stats Header
@@ -395,6 +403,7 @@ struct ExerciseDetailView: View {
         )
     }
 
+    // No save here: this fires per keystroke. Persisting is handled on focus loss.
     private func updateSet(id: Exercise.ExerciseSet.ID, _ mutate: (inout Exercise.ExerciseSet) -> Void) {
         guard let idx = exercise.sets.firstIndex(where: { $0.id == id }) else { return }
         var copy = exercise.sets
@@ -408,6 +417,7 @@ struct ExerciseDetailView: View {
         var copy = exercise.sets
         copy.append(newSet)
         exercise.sets = copy
+        modelContext.saveIfNeeded()
         return newSet.id
     }
 
@@ -415,6 +425,7 @@ struct ExerciseDetailView: View {
         var copy = exercise.sets
         copy.removeAll { $0.id == id }
         exercise.sets = copy
+        modelContext.saveIfNeeded()
     }
 
 }

@@ -20,6 +20,7 @@ extension ExerciseDetailView {
                     exercise.mediaItems.append(
                         Exercise.MediaItem(fileName: fileName, fileType: .image)
                     )
+                    modelContext.saveIfNeeded()
                 }
             }
             return
@@ -32,6 +33,7 @@ extension ExerciseDetailView {
                     exercise.mediaItems.append(
                         Exercise.MediaItem(fileName: savedURL.lastPathComponent, fileType: .video)
                     )
+                    modelContext.saveIfNeeded()
                 }
             }
         }
@@ -60,6 +62,7 @@ extension ExerciseDetailView {
                                     exercise.mediaItems.append(
                                         Exercise.MediaItem(fileName: savedURL.lastPathComponent, fileType: .video)
                                     )
+                                    modelContext.saveIfNeeded()
                                 }
                             }
                         } else if let image = NSImage(contentsOf: url) {
@@ -69,6 +72,7 @@ extension ExerciseDetailView {
                                     exercise.mediaItems.append(
                                         Exercise.MediaItem(fileName: fileName, fileType: .image)
                                     )
+                                    modelContext.saveIfNeeded()
                                 }
                             }
                         }

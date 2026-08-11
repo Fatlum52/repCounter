@@ -14,10 +14,12 @@ final class SessionTemplateStore {
     ) -> SessionTemplate {
         let template = SessionTemplate(name: name, exerciseDefinitionIDs: exerciseDefinitionIDs)
         context.insert(template)
+        context.saveIfNeeded()
         return template
     }
 
     func removeTemplate(_ template: SessionTemplate, in context: ModelContext) {
         context.delete(template)
+        context.saveIfNeeded()
     }
 }

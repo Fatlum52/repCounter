@@ -10,8 +10,8 @@ final class SessionStore {
 
     @discardableResult
     func createSession(name: String, date: Date = .now, in context: ModelContext) -> Session {
-        let session = Session(name: name, date: date)
-        context.insert(session)
+        let session = insertSession(name: name, date: date, in: context)
+        context.saveIfNeeded()
         return session
     }
 
@@ -19,7 +19,8 @@ final class SessionStore {
     // matches template order.
     @discardableResult
     func createSession(from template: SessionTemplate, in context: ModelContext) -> Session {
-        let session = createSession(name: template.name, in: context)
+        // Inserts without saving so the session and its exercises land in one transaction.
+        let session = insertSession(name: template.name, in: context)
         let definitions = ExerciseTemplateStore.shared.definitions(forIDs: template.exerciseDefinitionIDs, in: context)
         for (index, definition) in definitions.enumerated() {
             let exercise = Exercise(definition.name)
@@ -28,6 +29,13 @@ final class SessionStore {
             exercise.order = index
             context.insert(exercise)
         }
+        context.saveIfNeeded()
+        return session
+    }
+
+    private func insertSession(name: String, date: Date = .now, in context: ModelContext) -> Session {
+        let session = Session(name: name, date: date)
+        context.insert(session)
         return session
     }
 
@@ -38,15 +46,18 @@ final class SessionStore {
         exercise.session = session
         exercise.order = (session.exerciseList.map(\.order).max() ?? -1) + 1
         context.insert(exercise)
+        context.saveIfNeeded()
     }
 
     func remove(_ session: Session, in context: ModelContext) {
         FileManagerHelper.deleteMediaFiles(for: session)
         context.delete(session)
+        context.saveIfNeeded()
     }
 
     func remove(_ exercise: Exercise, in context: ModelContext) {
         FileManagerHelper.deleteMediaFiles(for: exercise)
         context.delete(exercise)
+        context.saveIfNeeded()
     }
 }

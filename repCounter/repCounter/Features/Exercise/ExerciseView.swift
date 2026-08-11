@@ -170,6 +170,7 @@ struct ExerciseView: View {
     }
     
     private func saveEdit(exercise: Exercise) {
+        modelContext.saveIfNeeded()
         cancelEdit()
     }
 }

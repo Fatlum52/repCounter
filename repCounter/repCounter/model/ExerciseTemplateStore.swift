@@ -9,10 +9,12 @@ final class ExerciseTemplateStore {
     func addTemplate(name: String, in context: ModelContext) {
         let template = ExerciseTemplate(name)
         context.insert(template)
+        context.saveIfNeeded()
     }
 
     func removeTemplate(_ template: ExerciseTemplate, in context: ModelContext) {
         context.delete(template)
+        context.saveIfNeeded()
     }
 
     // Find-or-create by name (case-insensitive). Single source of truth for
@@ -26,6 +28,7 @@ final class ExerciseTemplateStore {
         }
         let created = ExerciseTemplate(trimmed)
         context.insert(created)
+        context.saveIfNeeded()
         return created
     }
 
