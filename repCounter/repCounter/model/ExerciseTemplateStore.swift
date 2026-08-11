@@ -38,6 +38,56 @@ final class ExerciseTemplateStore {
         return ids.compactMap { byID[$0] }
     }
 
+    /// Merges templates that share a name (case-insensitive) into one, keeping the
+    /// lowest `id` as the survivor so every device converges on the same winner
+    /// without coordinating. Returns the number of merged-away duplicates.
+    ///
+    /// Needed because CloudKit dedups by its own record id, not by our `id`
+    /// attribute: two devices seeding the defaults before the first sync lands
+    /// each create their own set, and both sets survive the merge.
+    @discardableResult
+    func deduplicate(in context: ModelContext) -> Int {
+        let all = (try? context.fetch(FetchDescriptor<ExerciseTemplate>())) ?? []
+        let groups = Dictionary(grouping: all) {
+            $0.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        }
+
+        var replacements: [UUID: UUID] = [:] // loser id → winner id
+        var losers: [ExerciseTemplate] = []
+
+        for (_, group) in groups where group.count > 1 {
+            let ordered = group.sorted { $0.id.uuidString < $1.id.uuidString }
+            let winner = ordered[0]
+            for loser in ordered.dropFirst() {
+                // Re-pointing the exercise updates `instances` too (it is the inverse).
+                for exercise in loser.instanceList {
+                    exercise.definition = winner
+                }
+                replacements[loser.id] = winner.id
+                losers.append(loser)
+            }
+        }
+
+        guard !losers.isEmpty else { return 0 }
+
+        // Session templates reference definitions by raw id, not by relationship,
+        // so they have to be remapped by hand.
+        let sessionTemplates = (try? context.fetch(FetchDescriptor<SessionTemplate>())) ?? []
+        for template in sessionTemplates {
+            var seen = Set<UUID>()
+            let remapped = template.exerciseDefinitionIDs
+                .map { replacements[$0] ?? $0 }
+                .filter { seen.insert($0).inserted } // a merge can collapse two entries into one
+            if remapped != template.exerciseDefinitionIDs {
+                template.exerciseDefinitionIDs = remapped
+            }
+        }
+
+        losers.forEach { context.delete($0) }
+        try? context.save()
+        return losers.count
+    }
+
     // MARK: - Defaults (hardcoded, not in SwiftData)
 
     static let defaultTemplateNames: [String] = [

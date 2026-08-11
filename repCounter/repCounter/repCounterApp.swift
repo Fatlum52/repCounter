@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SwiftData
+import CoreData
 
 @main
 struct repCounterApp: App {
@@ -20,7 +21,11 @@ struct repCounterApp: App {
             ExerciseTemplate.self,
             SessionTemplate.self
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false,
+            cloudKitDatabase: .automatic // uses the container from the entitlements
+        )
 
         do {
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -38,7 +43,10 @@ struct repCounterApp: App {
                 }
                 try context.save()
             }
-            
+
+            // Merge duplicates a previous launch synced in (see `deduplicate`).
+            ExerciseTemplateStore.shared.deduplicate(in: context)
+
             return container
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
@@ -57,6 +65,15 @@ struct repCounterApp: App {
                 }
             }
             .id(appLanguage) // rebuild the tree so a language switch applies immediately
+            .task {
+                // A launch-only dedup would miss the common case: a fresh device
+                // seeds its own defaults, then the synced ones arrive seconds later.
+                for await _ in NotificationCenter.default.notifications(
+                    named: .NSPersistentStoreRemoteChange
+                ) {
+                    ExerciseTemplateStore.shared.deduplicate(in: sharedModelContainer.mainContext)
+                }
+            }
         }
         .modelContainer(sharedModelContainer)
     }
