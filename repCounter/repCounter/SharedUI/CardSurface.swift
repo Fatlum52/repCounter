@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// The shared card surface: material fill + rounded corners + stroke + optional shadow.
-/// Single source for the `.background(.regularMaterial).cornerRadius().overlay(stroke).shadow()`
-/// pattern that used to be duplicated across cards, sections and the pagination bar.
+// The shared card surface: material fill + rounded corners + stroke + optional shadow.
+// Single source for a pattern that was duplicated across cards, sections and the pagination bar.
 struct CardSurface: ViewModifier {
     var cornerRadius: CGFloat = 12
     var isHighlighted: Bool = false

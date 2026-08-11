@@ -37,13 +37,11 @@ struct repCounterApp: App {
         do {
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
             
-            // Initialize default exercise templates ONLY on first app launch
+            // Seed the default templates on first launch only.
             let context = container.mainContext
             let descriptor = FetchDescriptor<ExerciseTemplate>()
             let existingTemplates = try? context.fetch(descriptor)
             
-            // If NO templates exist at all → First launch → Create defaults
-            // If templates exist → Already initialized → Do nothing
             if existingTemplates?.isEmpty == true {
                 for defaultName in ExerciseTemplateStore.defaultTemplateNames.reversed() {
                     ExerciseTemplateStore.shared.addTemplate(name: defaultName, in: context)
@@ -73,8 +71,8 @@ struct repCounterApp: App {
             }
             .id(appLanguage) // rebuild the tree so a language switch applies immediately
             .task {
-                // A launch-only dedup would miss the common case: a fresh device
-                // seeds its own defaults, then the synced ones arrive seconds later.
+                // A launch-only dedup would miss a fresh device seeding its own defaults
+                // seconds before the synced ones arrive.
                 for await _ in NotificationCenter.default.notifications(
                     named: .NSPersistentStoreRemoteChange
                 ) {

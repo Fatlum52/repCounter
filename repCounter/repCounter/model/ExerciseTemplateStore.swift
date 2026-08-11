@@ -15,8 +15,8 @@ final class ExerciseTemplateStore {
         context.delete(template)
     }
 
-    /// Find-or-create by name (case-insensitive). Single source of truth for
-    /// exercise definitions: picking an existing library entry never creates a duplicate.
+    // Find-or-create by name (case-insensitive). Single source of truth for
+    // exercise definitions: picking an existing library entry never creates a duplicate.
     @discardableResult
     func definition(named name: String, in context: ModelContext) -> ExerciseTemplate {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -29,22 +29,15 @@ final class ExerciseTemplateStore {
         return created
     }
 
-    /// Late ID→Definition mapping: fetches all templates and orders them in-memory
-    /// by the given ids. Missing (deleted) ids are dropped. Only ids are stored;
-    /// the name is resolved here at render/build time.
+    // Late ID→definition mapping, ordered by `ids`. Deleted ids are dropped.
     func definitions(forIDs ids: [UUID], in context: ModelContext) -> [ExerciseTemplate] {
         let all = (try? context.fetch(FetchDescriptor<ExerciseTemplate>())) ?? []
         let byID = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         return ids.compactMap { byID[$0] }
     }
 
-    /// Merges templates that share a name (case-insensitive) into one, keeping the
-    /// lowest `id` as the survivor so every device converges on the same winner
-    /// without coordinating. Returns the number of merged-away duplicates.
-    ///
-    /// Needed because CloudKit dedups by its own record id, not by our `id`
-    /// attribute: two devices seeding the defaults before the first sync lands
-    /// each create their own set, and both sets survive the merge.
+    // Merges same-name templates, keeping the lowest `id` so every device picks the same
+    // survivor. Needed because CloudKit dedups by its record id, not by our `id` attribute.
     @discardableResult
     func deduplicate(in context: ModelContext) -> Int {
         let all = (try? context.fetch(FetchDescriptor<ExerciseTemplate>())) ?? []

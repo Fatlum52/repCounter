@@ -15,14 +15,13 @@ enum FileManagerHelper {
     private static let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "repCounter", category: "FileManager")
 
     // MARK: - Documents Directory
-    // documents directory of the app
     static func getDocumentsDirectory() -> URL {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
 
     // MARK: - Image Support
 #if os(iOS)
-    // saves UIImage as jpeg in documents directory (background QoS to avoid priority inversion)
+    // Encodes on background QoS: JPEG work off the main actor avoids priority inversion.
     @discardableResult
     static func saveImageToDocuments(image: UIImage, fileName: String) async -> URL? {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
@@ -43,7 +42,6 @@ enum FileManagerHelper {
         }
     }
 
-    // loads saved image as SwiftUI Image
     static func loadImageFromDocuments(fileName: String) -> Image? {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
         guard let uiImage = UIImage(contentsOfFile: url.path) else { return nil }
@@ -52,7 +50,7 @@ enum FileManagerHelper {
 
 #elseif os(macOS)
 
-    // saves NSImage as jpeg in documents directory (background QoS to avoid priority inversion)
+    // Encodes on background QoS: JPEG work off the main actor avoids priority inversion.
     @discardableResult
     static func saveImageToDocuments(image: NSImage, fileName: String) async -> URL? {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
@@ -87,18 +85,16 @@ enum FileManagerHelper {
 
 #endif
 
-    // deletes file from documents directory
     static func deleteFileFromDocuments(fileName: String) {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
         try? FileManager.default.removeItem(at: url)
     }
 
     // MARK: - Video Support
-    // public entrypoint to safe videos
     static func saveVideoToDocuments(videoURL: URL, fileName: String) async -> URL? {
         let destinationURL = getDocumentsDirectory().appendingPathComponent(fileName)
 
-        // no duplicates, removes existing file
+        // Export refuses to overwrite, so clear any existing file first.
         if FileManager.default.fileExists(atPath: destinationURL.path) {
             try? FileManager.default.removeItem(at: destinationURL)
         }
@@ -109,7 +105,7 @@ enum FileManagerHelper {
         )
     }
 
-    // compromises video depending the source (camera or upload
+    // Compresses on export; uploaded videos get a smaller preset than camera captures.
     private static func compressAndSaveVideo(
         sourceURL: URL,
         destinationURL: URL
@@ -117,11 +113,9 @@ enum FileManagerHelper {
 
         let asset = AVURLAsset(url: sourceURL)
 
-        // uploaded videos normally are not from temp-directory
+        // Camera captures land in the temp directory; anything else came from the library.
         let isUploadedVideo = !sourceURL.path.contains(NSTemporaryDirectory())
 
-        // preset depending on source
-        // uploads compromise more aggressiv
         let preset: String = isUploadedVideo
             ? AVAssetExportPreset640x480
             : AVAssetExportPresetMediumQuality
@@ -138,7 +132,6 @@ enum FileManagerHelper {
 
         exportSession.shouldOptimizeForNetworkUse = true
 
-        // export using iOS 18+ API
         do {
             try await exportSession.export(to: destinationURL, as: .mp4)
 
@@ -157,7 +150,7 @@ enum FileManagerHelper {
         }
     }
 
-    // fallback: copy video without changes if export-errors
+    // Last resort: keep the original, uncompressed, rather than losing the video.
     private static func copyVideoFallback(
         sourceURL: URL,
         destinationURL: URL
@@ -171,21 +164,19 @@ enum FileManagerHelper {
         }
     }
 
-    // returns URL of saved video if there
+    // nil when the file is missing.
     static func getVideoURL(fileName: String) -> URL? {
         let url = getDocumentsDirectory().appendingPathComponent(fileName)
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
     }
 
     // MARK: - Media Cleanup
-    // deletes media from exercise
     static func deleteMediaFiles(for exercise: Exercise) {
         for mediaItem in exercise.mediaItems {
             deleteFileFromDocuments(fileName: mediaItem.fileName)
         }
     }
 
-    // deletes media from training session
     static func deleteMediaFiles(for session: Session) {
         for exercise in session.exerciseList {
             deleteMediaFiles(for: exercise)

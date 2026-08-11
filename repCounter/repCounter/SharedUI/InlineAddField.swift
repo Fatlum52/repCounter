@@ -2,19 +2,15 @@ import SwiftUI
 
 struct InlineAddField: View {
     
-    // config
     let menuTitle:LocalizedStringKey
     let actionTitle:LocalizedStringKey
     let placeholder:LocalizedStringKey
     
-    // data
     @Binding var text:String
     
-    // UI-State
     @State private var isAdding = false
     @FocusState private var isFocused: Bool
     
-    // actions
     var onAdd: (String) -> Void
     var onSelectFromLibrary: (() -> Void)? = nil
     var onCancel: () -> Void
@@ -92,4 +88,3 @@ struct InlineAddField: View {
         text = ""
     }
 }
-

@@ -1,9 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// Picks an `ExerciseTemplate` from the library, or find-or-creates a new one
-/// via the "add to library" field. Fully controlled: `onPick`/`onCancel` own dismissal,
-/// so it works both as a sheet and as inline sheet content.
+// Picks or find-or-creates an `ExerciseTemplate`. Fully controlled — `onPick`/`onCancel` own
+// dismissal — so it works both as a sheet and as inline sheet content.
 struct ExerciseLibraryPicker: View {
 
     @Environment(\.modelContext) private var modelContext

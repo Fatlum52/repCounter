@@ -13,28 +13,24 @@ struct NameEditOverlay: View {
     var body: some View {
         if isPresented {
             GeometryReader { geo in
-                // width ~ 2/3, height ~ 1/3 of screen size
+                // Both derived from width so the dialog keeps its shape in either orientation.
                 let boxW = geo.size.width * 0.66
-                let boxH = geo.size.width * 0.38 // minimal height for content
+                let boxH = geo.size.width * 0.38
                 
                 ZStack {
-                    // Dimmer
                     Color.black.opacity(0.35)
                         .ignoresSafeArea()
                         .onTapGesture { handleCancle() }
                     
-                    // dialogue-card
                     VStack(spacing: 14) {
                         Text(title)
                             .font(.headline)
                         
-                        // textfield
                         TextField("Name", text: $name)
                             .textFieldStyle(.roundedBorder)
                             .focused($isFieldFocused)
                             .onSubmit { handleSafe() }
                         
-                        // buttons
                         HStack(spacing: 24) {
                             Button("", systemImage: "x.circle") {
                                 handleCancle()

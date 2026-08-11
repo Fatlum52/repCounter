@@ -39,7 +39,3 @@ struct TemplateSheetView: View {
 #endif
     }
 }
-
-#Preview {
-    //TemplateSheetView()
-}

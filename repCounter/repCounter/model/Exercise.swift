@@ -47,7 +47,7 @@ final class Exercise: Identifiable {
         sets.reduce(0) { $0 + ($1.weight * Double(max($1.reps, 1))) }
     }
 
-    /// Heaviest single set (0 if there are no sets).
+    // Heaviest single set (0 if there are no sets).
     var bestSetWeight: Double {
         sets.map(\.weight).max() ?? 0
     }

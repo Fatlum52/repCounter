@@ -1,14 +1,7 @@
 import SwiftUI
 
-/// Registers for remote notifications so CloudKit can push changes into a *running* app.
-///
-/// `NSPersistentCloudKitContainer` sets up its own CloudKit subscription, but the silent
-/// pushes it relies on are only delivered once the app has an APNs token — and that
-/// requires an explicit `registerForRemoteNotifications()` call. Without it the store
-/// imports remote changes at launch only, which looks exactly like "sync is broken until
-/// I rebuild and rerun".
-///
-/// This registers for *silent* pushes only, so it shows no permission prompt.
+// CloudKit's silent pushes are only delivered once the app has an APNs token, so without
+// this registration remote changes import at launch only. Silent pushes need no prompt.
 #if os(iOS)
 import UIKit
 

@@ -7,12 +7,8 @@ import AudioToolbox
 import AppKit
 #endif
 
-/// The "your time is up" signal, in two halves.
-///
-/// Which half fires depends on where the app is when the countdown ends: a suspended
-/// app runs no code at all, so the only way to make noise then is a local notification
-/// scheduled up front. When the app *is* on screen we play the sound directly and drop
-/// the pending notification, so the user never hears both.
+// The "time is up" signal. A suspended app runs no code, so a notification is scheduled up
+// front; if we are on screen at zero we play the sound directly and drop that notification.
 enum TimerAlert {
 
     private static let requestID = "repCounter.timer.finished"
@@ -29,17 +25,14 @@ enum TimerAlert {
 
     // MARK: - Background
 
-    /// Schedules the alert for `endDate`. Authorization is requested here, on first
-    /// use, rather than at launch — the prompt only makes sense once the user has
-    /// actually started a timer.
+    // Authorization is requested on first use, not at launch, so the prompt has context.
     static func schedule(at endDate: Date) {
         Task {
             let center = UNUserNotificationCenter.current()
             let granted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
             guard granted else { return }
 
-            // Re-read the remaining time: the permission prompt may have sat on
-            // screen for a while, so the original duration is no longer accurate.
+            // Re-read: the permission prompt may have eaten some of the original duration.
             let interval = endDate.timeIntervalSinceNow
             guard interval > 0 else { return }
 

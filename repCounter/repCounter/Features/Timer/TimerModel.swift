@@ -1,12 +1,8 @@
 import Foundation
 import SwiftUI
 
-/// Countdown state for `TimerView`.
-///
-/// The countdown is anchored to an absolute `endDate`, not to a counter that ticks
-/// down. The ticker only *reads* the clock, so a stall — a suspended app, a dropped
-/// tick, a slow frame — can never make the timer drift: whenever it next runs, the
-/// remaining time is still correct.
+// Countdown state for `TimerView`. Anchored to an absolute `endDate` rather than a
+// ticking counter, so a suspended app or a dropped tick can never make it drift.
 @MainActor
 @Observable
 final class TimerModel {
@@ -15,17 +11,15 @@ final class TimerModel {
         case idle, running, paused, finished
     }
 
-    /// macOS starts empty because its fields are typed into — a prefilled value would
-    /// just have to be deleted first. The iOS wheel opens on a usable default instead,
-    /// since spinning away from it costs nothing.
+    // macOS starts empty since its fields are typed into; the iOS wheel opens on a
+    // default because spinning away from one costs nothing.
     #if os(macOS)
     private static let defaultMinutes = 0
     #else
     private static let defaultMinutes = 2
     #endif
 
-    /// Duration selection, kept separate from the running countdown so cancelling
-    /// returns the user to the duration they last dialled in.
+    // Kept separate from the running countdown so cancelling restores the last dialled duration.
     var selectedMinutes = TimerModel.defaultMinutes
     var selectedSeconds = 0
 
@@ -49,7 +43,7 @@ final class TimerModel {
         return min(max(1 - remaining / totalDuration, 0), 1)
     }
 
-    /// `mm:ss`, rounded up so a fresh 2:00 timer reads "02:00" rather than "01:59".
+    // `mm:ss`, rounded up so a fresh 2:00 timer reads "02:00" rather than "01:59".
     var formattedRemaining: String {
         let seconds = Int(max(0, remaining.rounded(.up)))
         return Duration.seconds(seconds)
@@ -87,15 +81,13 @@ final class TimerModel {
         totalDuration = 0
     }
 
-    /// A suspended app runs no ticker, so the countdown is re-checked against the
-    /// clock on every return to the foreground.
+    // A suspended app runs no ticker, so re-check against the clock on every return.
     func handleScenePhase(_ phase: ScenePhase) {
         guard state == .running else { return }
         switch phase {
         case .active:
             if let endDate, endDate.timeIntervalSinceNow <= 0 {
-                // It ran out while we were away — the notification already sounded,
-                // so catch up on the state without making noise a second time.
+                // It ran out while we were away and the notification already sounded.
                 finish(playSound: false)
             } else {
                 startTicker()
@@ -132,7 +124,7 @@ final class TimerModel {
         ticker = nil
     }
 
-    /// Returns `true` once the countdown has reached zero, to end the ticker loop.
+    // Returns `true` once the countdown has reached zero, to end the ticker loop.
     private func tick() -> Bool {
         guard state == .running, let endDate else { return true }
         remaining = max(0, endDate.timeIntervalSinceNow)

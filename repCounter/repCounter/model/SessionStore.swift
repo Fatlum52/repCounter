@@ -1,8 +1,8 @@
 import Foundation
 import SwiftData
 
-/// Central place for creating/removing sessions and their exercises.
-/// Views only pick; they never call `modelContext.insert/.delete` directly.
+// Central place for creating/removing sessions and their exercises.
+// Views only pick; they never call `modelContext.insert/.delete` directly.
 final class SessionStore {
 
     static let shared = SessionStore()
@@ -15,9 +15,8 @@ final class SessionStore {
         return session
     }
 
-    /// Builds a session from a template. Exercise definitions are resolved from
-    /// `exerciseDefinitionIDs` via `definitions(forIDs:)` (in template order) and
-    /// assigned ascending `order` (0…n), so session order == template order.
+    // Builds a session from a template, assigning ascending `order` so session order
+    // matches template order.
     @discardableResult
     func createSession(from template: SessionTemplate, in context: ModelContext) -> Session {
         let session = createSession(name: template.name, in: context)
@@ -32,8 +31,7 @@ final class SessionStore {
         return session
     }
 
-    /// Adds an exercise to a session from a library definition. Snapshots the
-    /// definition name into the exercise and appends at the end (ascending order).
+    // Appends a library definition to a session, snapshotting its name into the exercise.
     func addExercise(_ definition: ExerciseTemplate, to session: Session, in context: ModelContext) {
         let exercise = Exercise(definition.name)
         exercise.definition = definition

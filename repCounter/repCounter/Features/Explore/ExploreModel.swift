@@ -1,8 +1,7 @@
 import Foundation
 
-/// Search + cursor-pagination state for `ExploreView`.
-/// `@MainActor` means every mutation runs on the main actor, so the view no longer
-/// needs `await MainActor.run { … }` blocks.
+// Search + cursor-pagination state for `ExploreView`. `@MainActor` throughout, which is
+// what lets the view drop its `await MainActor.run { … }` blocks.
 @MainActor
 @Observable
 final class ExploreModel {
