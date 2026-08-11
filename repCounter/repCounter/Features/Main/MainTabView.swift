@@ -27,6 +27,10 @@ struct MainTabView: View {
                     ExploreView()
                 }
 
+                Tab("Timer", systemImage: "timer") {
+                    TimerView()
+                }
+
                 Tab("More", systemImage: "ellipsis.circle") {
                     MoreView()
                 }
