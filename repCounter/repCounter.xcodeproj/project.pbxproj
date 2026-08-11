@@ -409,6 +409,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = repCounter/repCounter.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
@@ -431,7 +432,7 @@
 				INFOPLIST_FILE = repCounter/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take photos and record videos of your exercises.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to record audio for exercise videos.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs access to your photo library to select images and videos for your exercises.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "RepCounter needs access to your photo library to select images and videos for your exercises.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -469,6 +470,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = repCounter/repCounter.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
@@ -491,7 +493,7 @@
 				INFOPLIST_FILE = repCounter/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take photos and record videos of your exercises.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to record audio for exercise videos.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs access to your photo library to select images and videos for your exercises.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "RepCounter needs access to your photo library to select images and videos for your exercises.";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
