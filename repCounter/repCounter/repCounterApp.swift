@@ -14,6 +14,13 @@ struct repCounterApp: App {
 
     @AppStorage("appLanguage") private var appLanguage = AppLanguage.system.rawValue
 
+    // Hooks up the APNs registration that CloudKit's live updates depend on.
+    #if os(iOS)
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    #elseif os(macOS)
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    #endif
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Session.self,
