@@ -216,7 +216,8 @@ struct ExerciseDetailView: View {
 
     @ViewBuilder
     private var lastPerformedSection: some View {
-        let summary = exercise.definition?.lastPerformedSummary ?? ""
+        let summary = exercise.definition?
+            .lastPerformedSummary(before: exercise.session?.date ?? Date()) ?? ""
         if !summary.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 10) {

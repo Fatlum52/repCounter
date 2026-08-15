@@ -30,11 +30,15 @@ final class ExerciseTemplate: Identifiable {
         instanceList.reduce(0) { $0 + $1.totalWeight }
     }
 
-    /// Read-only summary of the most recent performed instance (an instance with sets).
+    /// Read-only summary of the most recent performed instance (an instance with sets)
+    /// from *before* the day of `referenceDate`. Instances on the reference day itself are
+    /// ignored, so sets added during the ongoing training never replace what is shown.
     /// Pure display — never written back into `sets`, so a new exercise stays empty.
-    var lastPerformedSummary: String {
+    func lastPerformedSummary(before referenceDate: Date) -> String {
+        let dayStart = Calendar.current.startOfDay(for: referenceDate)
+
         let done = instanceList
-            .filter { !$0.sets.isEmpty }
+            .filter { !$0.sets.isEmpty && ($0.session?.date ?? Date.distantPast) < dayStart }
             .sorted { ($0.session?.date ?? .distantPast) > ($1.session?.date ?? .distantPast) }
 
         guard let latest = done.first, let date = latest.session?.date else { return "" }
