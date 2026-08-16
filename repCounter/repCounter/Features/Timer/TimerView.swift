@@ -22,12 +22,25 @@ struct TimerView: View {
                         countdownRing
                     }
 
+                    if model.isRinging {
+                        ringingHint
+                    }
+
                     controls
 
                     Spacer(minLength: 0)
                 }
                 .padding(.horizontal, 24)
                 .animation(.snappy, value: model.state)
+
+                // Swallows the first tap while the alarm loops, so silencing it cannot
+                // also spin the wheel underneath.
+                if model.isRinging {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .ignoresSafeArea()
+                        .onTapGesture { model.silence() }
+                }
             }
             .navigationTitle("Timer")
 #if os(iOS)
@@ -37,7 +50,20 @@ struct TimerView: View {
         .onChange(of: scenePhase) { _, phase in
             model.handleScenePhase(phase)
         }
-        .sensoryFeedback(.success, trigger: model.state == .finished)
+        .sensoryFeedback(.success, trigger: model.isRinging)
+    }
+
+    // MARK: - Ringing
+
+    // Not a button: any tap on the screen silences the alarm, this only says so.
+    private var ringingHint: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "bell.fill")
+            Text("Timer finished — tap to stop")
+        }
+        .font(.subheadline.weight(.medium))
+        .foregroundStyle(accent)
+        .transition(.opacity)
     }
 
     // MARK: - Duration picker
@@ -155,10 +181,6 @@ struct TimerView: View {
                     Text("Paused")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                } else if model.state == .finished {
-                    Text("Timer finished")
-                        .font(.subheadline)
-                        .foregroundStyle(accent)
                 }
             }
         }
@@ -185,10 +207,6 @@ struct TimerView: View {
                 Button("Cancel") { model.reset() }
                     .buttonStyle(.bordered)
                 Button("Resume") { model.resume() }
-                    .buttonStyle(.borderedProminent)
-
-            case .finished:
-                Button("Done") { model.reset() }
                     .buttonStyle(.borderedProminent)
             }
         }

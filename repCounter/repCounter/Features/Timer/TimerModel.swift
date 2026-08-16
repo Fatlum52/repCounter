@@ -7,8 +7,10 @@ import SwiftUI
 @Observable
 final class TimerModel {
 
+    // No `finished` case: at zero the countdown drops straight back to `idle` and the
+    // alarm carries the news, so there is nothing to acknowledge.
     enum State {
-        case idle, running, paused, finished
+        case idle, running, paused
     }
 
     // macOS starts empty since its fields are typed into; the iOS wheel opens on a
@@ -26,9 +28,24 @@ final class TimerModel {
     private(set) var state: State = .idle
     private(set) var remaining: TimeInterval = 0
 
+    // The alarm loops until silenced. Independent of `state`, which is back to `idle`.
+    private(set) var isRinging = false
+
     private var endDate: Date?
     private var totalDuration: TimeInterval = 0
     private var ticker: Task<Void, Never>?
+
+    // The lock screen's Stop button runs `StopTimerIntent` in this process and posts here.
+    // The loop holds `self` weakly and returns on the first post after deallocation, so it
+    // needs no cancellation from `deinit` (which could not touch actor state anyway).
+    init() {
+        Task { [weak self] in
+            for await _ in NotificationCenter.default.notifications(named: .repCounterStopTimer) {
+                guard let self else { return }
+                self.silence()
+            }
+        }
+    }
 
     // MARK: - Derived
 
@@ -54,6 +71,7 @@ final class TimerModel {
 
     func start() {
         guard canStart else { return }
+        silence()
         totalDuration = selectedDuration
         beginCountdown(seconds: totalDuration)
     }
@@ -62,9 +80,16 @@ final class TimerModel {
         guard state == .running, let endDate else { return }
         stopTicker()
         TimerAlert.cancelScheduled()
+        TimerAlert.stopAudio()
         remaining = max(0, endDate.timeIntervalSinceNow)
         self.endDate = nil
         state = .paused
+        #if os(iOS)
+        TimerLiveActivity.update(
+            endDate: Date().addingTimeInterval(remaining),
+            pausedRemaining: remaining
+        )
+        #endif
     }
 
     func resume() {
@@ -75,25 +100,31 @@ final class TimerModel {
     func reset() {
         stopTicker()
         TimerAlert.cancelScheduled()
+        silence()
         state = .idle
         remaining = 0
         endDate = nil
         totalDuration = 0
     }
 
-    // A suspended app runs no ticker, so re-check against the clock on every return.
+    // Stops the alarm *and* the silent keep-alive, and clears the lock screen.
+    func silence() {
+        isRinging = false
+        TimerAlert.stopAudio()
+        #if os(iOS)
+        TimerLiveActivity.end()
+        #endif
+    }
+
+    // The audio session keeps the process alive in the background, so the ticker is left
+    // running there — that is what lets the alarm fire on a locked device.
     func handleScenePhase(_ phase: ScenePhase) {
         guard state == .running else { return }
-        switch phase {
-        case .active:
-            if let endDate, endDate.timeIntervalSinceNow <= 0 {
-                // It ran out while we were away and the notification already sounded.
-                finish(playSound: false)
-            } else {
-                startTicker()
-            }
-        default:
-            stopTicker()
+        if phase == .active, let endDate, endDate.timeIntervalSinceNow <= 0 {
+            // It ran out while iOS had us suspended after all; the notification covered it.
+            finish(playSound: false)
+        } else {
+            startTicker()
         }
     }
 
@@ -105,6 +136,10 @@ final class TimerModel {
         remaining = seconds
         state = .running
         TimerAlert.schedule(at: end)
+        TimerAlert.startKeepAlive()
+        #if os(iOS)
+        TimerLiveActivity.start(endDate: end)
+        #endif
         startTicker()
     }
 
@@ -137,11 +172,20 @@ final class TimerModel {
         stopTicker()
         remaining = 0
         endDate = nil
-        state = .finished
-        if playSound {
-            // We are on screen, so the scheduled notification would only duplicate this.
-            TimerAlert.cancelScheduled()
-            TimerAlert.playNow()
+        totalDuration = 0
+        state = .idle
+
+        guard playSound else {
+            silence()
+            return
         }
+
+        // We are handling it live, so the scheduled notification would only duplicate this.
+        TimerAlert.cancelScheduled()
+        isRinging = true
+        TimerAlert.startRinging()
+        #if os(iOS)
+        TimerLiveActivity.update(endDate: Date(), isRinging: true)
+        #endif
     }
 }
