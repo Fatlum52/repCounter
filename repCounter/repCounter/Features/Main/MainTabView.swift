@@ -19,16 +19,16 @@ struct MainTabView: View {
                     SessionView()
                 }
                 
+                Tab("Timer", systemImage: "timer") {
+                    TimerView()
+                }
+                
                 Tab("Library", systemImage: "building.columns.fill") {
                     LibraryView()
                 }
                 
                 Tab("Explore", systemImage: "magnifyingglass.circle") {
                     ExploreView()
-                }
-
-                Tab("Timer", systemImage: "timer") {
-                    TimerView()
                 }
 
                 Tab("More", systemImage: "ellipsis.circle") {
@@ -38,6 +38,8 @@ struct MainTabView: View {
         }
 #if os(iOS)
         .toolbarBackground(.hidden, for: .tabBar)
+#else
+        .toolbarBackground(.hidden, for: .windowToolbar)
 #endif
     }
 }
