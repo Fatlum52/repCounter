@@ -29,6 +29,7 @@ struct ExerciseExploreDetailView: View {
                     musclesSection
                     equipmentSection
                     instructionsSection
+                    AscendAPIAttribution()
                 }
                 .padding(.vertical, 16)
             }

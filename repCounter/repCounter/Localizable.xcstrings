@@ -325,6 +325,16 @@
         }
       }
     },
+    "Exercise data by": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übungsdaten von"
+          }
+        }
+      }
+    },
     "Exercise name": {
       "localizations": {
         "de": {

@@ -48,6 +48,8 @@ struct ExploreView: View {
                     initialStateView
                     Spacer()
                 }
+
+                AscendAPIAttribution()
             }
             .padding(.top, 16)
         }
