@@ -4,6 +4,7 @@ import os
 import UIKit
 import AVKit
 import AVFoundation
+import SwiftData
 #elseif os(macOS)
 import AppKit
 import AVKit
