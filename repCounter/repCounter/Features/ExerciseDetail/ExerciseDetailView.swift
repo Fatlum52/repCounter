@@ -414,7 +414,9 @@ struct ExerciseDetailView: View {
 
     @discardableResult
     private func addSet() -> Exercise.ExerciseSet.ID? {
-        let newSet = Exercise.ExerciseSet("Set \(exercise.sets.count + 1)")
+        var newSet = Exercise.ExerciseSet("Set \(exercise.sets.count + 1)")
+        // Carry the weight over from the previous set; reps start at 0 again.
+        newSet.weight = exercise.sets.last?.weight ?? 0
         var copy = exercise.sets
         copy.append(newSet)
         exercise.sets = copy
