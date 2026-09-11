@@ -70,7 +70,7 @@ struct ExploreView: View {
                 TextField("Search for exercises...", text: $model.searchText)
                     .textFieldStyle(.plain)
                     .submitLabel(.search)
-                    .onSubmit { Task { await model.performSearch() } }
+                    .onSubmit { model.search() }
 
                 if !model.searchText.isEmpty {
                     Button {
@@ -86,7 +86,7 @@ struct ExploreView: View {
             .cornerRadius(12)
 
             Button {
-                Task { await model.performSearch() }
+                model.search()
             } label: {
                 Image(systemName: "arrow.right.circle.fill")
                     .font(.title2)
@@ -114,6 +114,8 @@ struct ExploreView: View {
             .padding(.bottom, 8)
         }
         .scrollIndicators(.hidden)
+        // Paging is instant now, so reset the scroll offset instead of landing mid-page.
+        .id(model.currentPage)
         .sheet(item: $selectedExercise) { exercise in
             NavigationStack {
                 ExerciseExploreDetailView(exercise: exercise)
@@ -135,7 +137,7 @@ struct ExploreView: View {
     private var paginationBar: some View {
         HStack {
             Button {
-                Task { await model.goToPreviousPage() }
+                model.goToPreviousPage()
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "chevron.left")
@@ -155,7 +157,7 @@ struct ExploreView: View {
             Spacer()
 
             Button {
-                Task { await model.goToNextPage() }
+                model.goToNextPage()
             } label: {
                 HStack(spacing: 6) {
                     Text("Next")
@@ -215,7 +217,7 @@ struct ExploreView: View {
                 .multilineTextAlignment(.center)
 
             Button("Try Again") {
-                Task { await model.retryCurrentPage() }
+                model.retry()
             }
             .buttonStyle(.borderedProminent)
             .padding(.top, 8)

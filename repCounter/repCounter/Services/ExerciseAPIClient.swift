@@ -92,6 +92,24 @@ struct ExerciseAPIClient {
         )
     }
 
+    /// Follows the cursor until every match is loaded (or `maxResults` is reached). The name
+    /// filter returns matches unranked, so callers need the whole set to sort by relevance.
+    /// Uses the API's largest page size to keep requests (and free-plan quota) to a minimum.
+    func searchAllExercises(name: String, maxResults: Int = 100) async throws -> [ExerciseDTO] {
+        var exercises: [ExerciseDTO] = []
+        var seenIDs = Set<String>()
+        var cursor: String?
+        repeat {
+            try Task.checkCancellation()
+            let page = try await searchExercises(name: name, limit: Self.maxPageSize, after: cursor)
+            exercises += page.exercises.filter { seenIDs.insert($0.id).inserted }
+            cursor = page.hasNextPage ? page.nextCursor : nil
+        } while cursor != nil && exercises.count < maxResults
+        return Array(exercises.prefix(maxResults))
+    }
+
+    private static let maxPageSize = 25
+
     func fetchExercise(id: String) async throws -> ExerciseDTO {
         let encoded = id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id
         guard let url = URL(string: "\(baseURL.absoluteString)/api/v1/exercises/\(encoded)") else {

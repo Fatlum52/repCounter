@@ -1,21 +1,22 @@
 import Foundation
 
-// Search + cursor-pagination state for `ExploreView`. `@MainActor` throughout, which is
-// what lets the view drop its `await MainActor.run { … }` blocks.
+// Search + pagination state for `ExploreView`. The API's name filter is fuzzy and returns
+// matches in arbitrary order ("Bench Press" came back 11th of 12 for "bench press"), so the
+// model loads every match once, ranks it by name relevance, and pages through it locally.
 @MainActor
 @Observable
 final class ExploreModel {
 
     var searchText = ""
-    var results: [ExerciseDTO] = []
     var isLoading = false
     var errorMessage: String?
     var hasSearched = false
-
     var currentPage = 1
-    var totalResults = 0
-    var hasNextPage = false
-    private var pageCursors: [String?] = [nil]
+
+    private var allResults: [ExerciseDTO] = []
+    // The query the current results belong to — retry uses it even if the field was edited since.
+    private var activeQuery = ""
+    private var searchTask: Task<Void, Never>?
 
     let pageSize: Int
     private let apiClient = ExerciseAPIClient()
@@ -24,36 +25,41 @@ final class ExploreModel {
         self.pageSize = pageSize
     }
 
-    var totalPages: Int {
-        guard totalResults > 0 else { return 1 }
-        return max(1, Int(ceil(Double(totalResults) / Double(pageSize))))
+    var results: [ExerciseDTO] {
+        let start = (currentPage - 1) * pageSize
+        guard start < allResults.count else { return [] }
+        return Array(allResults[start..<min(start + pageSize, allResults.count)])
     }
+
+    var totalResults: Int { allResults.count }
+
+    var totalPages: Int {
+        max(1, Int(ceil(Double(totalResults) / Double(pageSize))))
+    }
+
+    var hasNextPage: Bool { currentPage < totalPages }
 
     // MARK: - Actions
 
-    func performSearch(reset: Bool = true) async {
-        guard !trimmedQuery.isEmpty else { return }
-        if reset { resetPagination() }
-        hasSearched = true
-        await loadPage(1, afterCursor: nil)
+    func search() {
+        let query = trimmedQuery
+        guard !query.isEmpty else { return }
+        startSearch(for: query)
     }
 
-    func goToNextPage() async {
+    func goToNextPage() {
         guard hasNextPage else { return }
-        let target = currentPage + 1
-        guard target - 1 < pageCursors.count else { return }
-        await loadPage(target, afterCursor: pageCursors[target - 1])
+        currentPage += 1
     }
 
-    func goToPreviousPage() async {
+    func goToPreviousPage() {
         guard currentPage > 1 else { return }
-        let target = currentPage - 1
-        await loadPage(target, afterCursor: pageCursors[target - 1])
+        currentPage -= 1
     }
 
-    func retryCurrentPage() async {
-        let cursor = (currentPage - 1 < pageCursors.count) ? pageCursors[currentPage - 1] : nil
-        await loadPage(currentPage, afterCursor: cursor)
+    func retry() {
+        guard !activeQuery.isEmpty else { return }
+        startSearch(for: activeQuery)
     }
 
     func clearSearch() {
@@ -62,10 +68,14 @@ final class ExploreModel {
     }
 
     func resetState() {
-        results = []
+        searchTask?.cancel()
+        searchTask = nil
+        allResults = []
+        activeQuery = ""
+        currentPage = 1
+        isLoading = false
         hasSearched = false
         errorMessage = nil
-        resetPagination()
     }
 
     // MARK: - Internals
@@ -74,36 +84,61 @@ final class ExploreModel {
         searchText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private func resetPagination() {
-        currentPage = 1
-        totalResults = 0
-        hasNextPage = false
-        pageCursors = [nil]
-    }
-
-    private func loadPage(_ page: Int, afterCursor: String?) async {
-        let query = trimmedQuery
-        guard !query.isEmpty else { return }
-
+    private func startSearch(for query: String) {
+        // A newer search supersedes one still in flight, so a slow response can't overwrite it.
+        searchTask?.cancel()
+        activeQuery = query
+        hasSearched = true
         isLoading = true
         errorMessage = nil
-        do {
-            let result = try await apiClient.searchExercises(name: query, limit: pageSize, after: afterCursor)
-            results = result.exercises
-            totalResults = result.total
-            hasNextPage = result.hasNextPage
-            currentPage = page
-
-            if result.hasNextPage, let next = result.nextCursor {
-                if pageCursors.count == page {
-                    pageCursors.append(next)
-                } else if page < pageCursors.count {
-                    pageCursors[page] = next
-                }
+        searchTask = Task {
+            do {
+                let matches = try await apiClient.searchAllExercises(name: query)
+                try Task.checkCancellation()
+                allResults = Self.rankedByRelevance(matches, query: query)
+                currentPage = 1
+            } catch {
+                if Task.isCancelled { return }
+                allResults = []
+                errorMessage = error.localizedDescription
             }
-        } catch {
-            errorMessage = error.localizedDescription
+            isLoading = false
         }
-        isLoading = false
+    }
+
+    // MARK: - Relevance
+
+    /// Exact name first, then names starting with the query, then names containing the whole
+    /// phrase, then by how many query words match. Shorter names win ties; otherwise API order.
+    static func rankedByRelevance(_ exercises: [ExerciseDTO], query: String) -> [ExerciseDTO] {
+        let phrase = normalized(query)
+        let queryWords = phrase.split(separator: " ")
+        return exercises.enumerated()
+            .map { index, exercise in
+                let name = normalized(exercise.name)
+                let nameWords = name.split(separator: " ")
+                let missing = queryWords.filter { word in !nameWords.contains { $0.hasPrefix(word) } }.count
+                let tier: Int
+                if name == phrase {
+                    tier = 0
+                } else if name.hasPrefix(phrase) {
+                    tier = 1
+                } else if " \(name)".contains(" \(phrase)") {
+                    tier = 2
+                } else {
+                    tier = 3 + missing
+                }
+                return (exercise, (tier, nameWords.count, index))
+            }
+            .sorted { $0.1 < $1.1 }
+            .map(\.0)
+    }
+
+    // Case/diacritic-insensitive, punctuation as word breaks: "Pull-up " → "pull up".
+    private static func normalized(_ text: String) -> String {
+        text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
     }
 }
