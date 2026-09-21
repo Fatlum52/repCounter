@@ -2,7 +2,15 @@ import SwiftUI
 
 struct MoreView: View {
 
-    @AppStorage("appLanguage") private var appLanguage = AppLanguage.system.rawValue
+    @AppStorage("appLanguage") private var appLanguage = AppLanguage.deviceDefault.rawValue
+
+    // Resolves legacy/unknown stored values so the picker always shows a selection.
+    private var languageSelection: Binding<AppLanguage> {
+        Binding(
+            get: { AppLanguage(storedValue: appLanguage) },
+            set: { appLanguage = $0.rawValue }
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -19,9 +27,9 @@ struct MoreView: View {
                     }
 
                     Section("Language") {
-                        Picker("Language", selection: $appLanguage) {
+                        Picker("Language", selection: languageSelection) {
                             ForEach(AppLanguage.allCases) { language in
-                                Text(language.displayName).tag(language.rawValue)
+                                Text(language.displayName).tag(language)
                             }
                         }
                         .pickerStyle(.inline)

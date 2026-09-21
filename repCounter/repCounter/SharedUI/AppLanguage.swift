@@ -1,29 +1,37 @@
 import Foundation
 
-/// User-selectable app language. `system` follows the device setting.
+/// User-selectable app language. Only languages the app is actually localized into are offered.
 enum AppLanguage: String, CaseIterable, Identifiable {
-    case system
     case english
     case german
 
     var id: String { rawValue }
 
-    var localeIdentifier: String? {
+    /// Best match between the device's preferred languages and the app's localizations.
+    static var deviceDefault: AppLanguage {
+        Bundle.main.preferredLocalizations.first == "de" ? .german : .english
+    }
+
+    /// Resolves a stored value, falling back to the device default for unknown
+    /// values (including the removed `system` option).
+    init(storedValue: String) {
+        self = AppLanguage(rawValue: storedValue) ?? .deviceDefault
+    }
+
+    var localeIdentifier: String {
         switch self {
-        case .system: nil
         case .english: "en"
         case .german: "de"
         }
     }
 
-    var locale: Locale? {
-        localeIdentifier.map(Locale.init(identifier:))
+    var locale: Locale {
+        Locale(identifier: localeIdentifier)
     }
 
-    /// Language names are shown in their own language (except System, which is localized).
+    /// Language names are shown in their own language.
     var displayName: String {
         switch self {
-        case .system: String(localized: "System")
         case .english: "English"
         case .german: "Deutsch"
         }

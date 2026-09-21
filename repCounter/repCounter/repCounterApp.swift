@@ -12,7 +12,7 @@ import CoreData
 @main
 struct repCounterApp: App {
 
-    @AppStorage("appLanguage") private var appLanguage = AppLanguage.system.rawValue
+    @AppStorage("appLanguage") private var appLanguage = AppLanguage.deviceDefault.rawValue
 
     // Hooks up the APNs registration that CloudKit's live updates depend on.
     #if os(iOS)
@@ -59,25 +59,18 @@ struct repCounterApp: App {
 
     var body: some Scene {
         WindowGroup {
-            let language = AppLanguage(rawValue: appLanguage) ?? .system
-            Group {
-                if let locale = language.locale {
-                    MainTabView()
-                        .environment(\.locale, locale)
-                } else {
-                    MainTabView()
+            MainTabView()
+                .environment(\.locale, AppLanguage(storedValue: appLanguage).locale)
+                .id(appLanguage) // rebuild the tree so a language switch applies immediately
+                .task {
+                    // A launch-only dedup would miss a fresh device seeding its own defaults
+                    // seconds before the synced ones arrive.
+                    for await _ in NotificationCenter.default.notifications(
+                        named: .NSPersistentStoreRemoteChange
+                    ) {
+                        ExerciseTemplateStore.shared.deduplicate(in: sharedModelContainer.mainContext)
+                    }
                 }
-            }
-            .id(appLanguage) // rebuild the tree so a language switch applies immediately
-            .task {
-                // A launch-only dedup would miss a fresh device seeding its own defaults
-                // seconds before the synced ones arrive.
-                for await _ in NotificationCenter.default.notifications(
-                    named: .NSPersistentStoreRemoteChange
-                ) {
-                    ExerciseTemplateStore.shared.deduplicate(in: sharedModelContainer.mainContext)
-                }
-            }
         }
         .modelContainer(sharedModelContainer)
     }
