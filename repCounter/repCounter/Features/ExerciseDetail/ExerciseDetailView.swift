@@ -12,6 +12,7 @@ struct ExerciseDetailView: View {
     @Bindable var exercise: Exercise
     // Not private: the media-import extension lives in another file.
     @Environment(\.modelContext) var modelContext
+    @Environment(\.locale) private var locale
     @FocusState private var focusedField: SetFocusField?
 
 #if os(iOS)
@@ -217,7 +218,7 @@ struct ExerciseDetailView: View {
     @ViewBuilder
     private var lastPerformedSection: some View {
         let summary = exercise.definition?
-            .lastPerformedSummary(before: exercise.session?.date ?? Date()) ?? ""
+            .lastPerformedSummary(before: exercise.session?.date ?? Date(), locale: locale) ?? ""
         if !summary.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 10) {

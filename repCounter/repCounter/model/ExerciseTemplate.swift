@@ -34,7 +34,8 @@ final class ExerciseTemplate: Identifiable {
     /// from *before* the day of `referenceDate`. Instances on the reference day itself are
     /// ignored, so sets added during the ongoing training never replace what is shown.
     /// Pure display — never written back into `sets`, so a new exercise stays empty.
-    func lastPerformedSummary(before referenceDate: Date) -> String {
+    /// `locale` is the in-app language; `String(localized:)` alone would follow the device language.
+    func lastPerformedSummary(before referenceDate: Date, locale: Locale) -> String {
         let dayStart = Calendar.current.startOfDay(for: referenceDate)
 
         let done = instanceList
@@ -44,7 +45,7 @@ final class ExerciseTemplate: Identifiable {
         guard let latest = done.first, let date = latest.session?.date else { return "" }
 
         // Locale-aware numeric date (e.g. "15.07.2026" in de, "7/15/2026" in en).
-        let dateString = date.formatted(date: .numeric, time: .omitted)
+        let dateString = date.formatted(Date.FormatStyle(date: .numeric, time: .omitted, locale: locale))
 
         let lines = latest.sets.enumerated().map { index, set -> String in
             let label = set.name.isEmpty ? "Set \(index + 1)" : set.name
@@ -52,6 +53,8 @@ final class ExerciseTemplate: Identifiable {
             return "[ \(label) - \(weight)kg - \(set.reps) reps ]"
         }
 
-        return String(localized: "Training on \(dateString)") + "\n" + lines.joined(separator: "\n")
+        var title = LocalizedStringResource("Training on \(dateString)")
+        title.locale = locale
+        return String(localized: title) + "\n" + lines.joined(separator: "\n")
     }
 }
