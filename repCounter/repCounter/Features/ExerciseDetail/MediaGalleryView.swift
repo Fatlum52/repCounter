@@ -1,14 +1,12 @@
 import SwiftUI
+import SwiftData
+import AVKit
+import AVFoundation
 import os
 #if os(iOS)
 import UIKit
-import AVKit
-import AVFoundation
-import SwiftData
 #elseif os(macOS)
 import AppKit
-import AVKit
-import AVFoundation
 #endif
 
 private let galleryLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "repCounter", category: "MediaGallery")
