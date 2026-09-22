@@ -536,6 +536,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = repCounter/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take photos and record videos of your exercises.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to record audio for exercise videos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "RepCounter needs access to your photo library to select images and videos for your exercises.";
@@ -597,6 +598,7 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = repCounter/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take photos and record videos of your exercises.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to record audio for exercise videos.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "RepCounter needs access to your photo library to select images and videos for your exercises.";
