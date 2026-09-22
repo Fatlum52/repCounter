@@ -5,7 +5,9 @@ import ActivityKit
 
 // Shared by the app (which starts and ends the activity) and the widget extension
 // (which renders it), so both sides agree on the payload.
-struct TimerActivityAttributes: ActivityAttributes {
+// `nonisolated` opts out of the app target's default MainActor isolation: ActivityKit
+// uses this conformance off the main actor.
+nonisolated struct TimerActivityAttributes: ActivityAttributes {
 
     // The lock screen renders the countdown with `Text(timerInterval:)`, which ticks on
     // its own — so only these anchors travel, never a per-second update.
