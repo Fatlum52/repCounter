@@ -49,7 +49,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		1B1433C52F0D2BB2003C8D57 /* repCounter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = repCounter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1B1433C52F0D2BB2003C8D57 /* Plain Reps.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Plain Reps.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1B1433D42F0D2BB3003C8D57 /* repCounterTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = repCounterTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1B1433DE2F0D2BB3003C8D57 /* repCounterUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = repCounterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1BA0000000000000000000A2 /* RepTimerWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = RepTimerWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -154,7 +154,7 @@
 		1B1433C62F0D2BB2003C8D57 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1B1433C52F0D2BB2003C8D57 /* repCounter.app */,
+				1B1433C52F0D2BB2003C8D57 /* Plain Reps.app */,
 				1B1433D42F0D2BB3003C8D57 /* repCounterTests.xctest */,
 				1B1433DE2F0D2BB3003C8D57 /* repCounterUITests.xctest */,
 				1BA0000000000000000000A2 /* RepTimerWidgetExtension.appex */,
@@ -187,7 +187,7 @@
 			packageProductDependencies = (
 			);
 			productName = repCounter;
-			productReference = 1B1433C52F0D2BB2003C8D57 /* repCounter.app */;
+			productReference = 1B1433C52F0D2BB2003C8D57 /* Plain Reps.app */;
 			productType = "com.apple.product-type.application";
 		};
 		1B1433D32F0D2BB3003C8D57 /* repCounterTests */ = {
@@ -519,7 +519,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = repCounter/repCounter.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J6B3BQ3SU3;
 				ENABLE_APP_SANDBOX = YES;
@@ -538,11 +538,12 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = repCounter/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Plain Reps";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take photos and record videos of your exercises.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to record audio for exercise videos.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "RepCounter needs access to your photo library to select images and videos for your exercises.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Plain Reps needs access to your photo library to select images and videos for your exercises.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -560,7 +561,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = ch.fatlum.repCounter;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = repCounter;
+				PRODUCT_NAME = "Plain Reps";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -583,7 +585,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = repCounter/repCounter.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J6B3BQ3SU3;
 				ENABLE_APP_SANDBOX = YES;
@@ -602,11 +604,12 @@
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = repCounter/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Plain Reps";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take photos and record videos of your exercises.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to record audio for exercise videos.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "RepCounter needs access to your photo library to select images and videos for your exercises.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Plain Reps needs access to your photo library to select images and videos for your exercises.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -624,7 +627,8 @@
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = ch.fatlum.repCounter;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = repCounter;
+				PRODUCT_NAME = "Plain Reps";
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -645,7 +649,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J6B3BQ3SU3;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -662,7 +666,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/repCounter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/repCounter";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Plain Reps.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Plain Reps";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Debug;
@@ -672,7 +676,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J6B3BQ3SU3;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -689,7 +693,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/repCounter.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/repCounter";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Plain Reps.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Plain Reps";
 				XROS_DEPLOYMENT_TARGET = 26.0;
 			};
 			name = Release;
@@ -698,7 +702,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J6B3BQ3SU3;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -724,7 +728,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J6B3BQ3SU3;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -751,7 +755,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J6B3BQ3SU3;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -786,7 +790,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J6B3BQ3SU3;
 				GENERATE_INFOPLIST_FILE = YES;
