@@ -1,8 +1,12 @@
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 struct TimerView: View {
 
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.openURL) private var openURL
     @State private var model = TimerModel()
 
     /// Same accent the highlighted card surface uses.
@@ -51,6 +55,20 @@ struct TimerView: View {
             model.handleScenePhase(phase)
         }
         .sensoryFeedback(.success, trigger: model.isRinging)
+#if os(iOS)
+        // AlarmKit is what rings the timer, so without the permission there is no point
+        // starting one; this points the way back to it.
+        .alert("Alarms are turned off", isPresented: $model.showsAlarmPermissionHint) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    openURL(url)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Allow Plain Reps to use alarms in Settings so the timer can ring when it ends.")
+        }
+#endif
     }
 
     // MARK: - Ringing

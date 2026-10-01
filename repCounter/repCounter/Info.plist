@@ -2,10 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSAlarmKitUsageDescription</key>
+	<string>Plain Reps uses alarms so your rest timer rings when it ends, even with the screen locked or in silent mode.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
-		<string>audio</string>
 	</array>
 </dict>
 </plist>

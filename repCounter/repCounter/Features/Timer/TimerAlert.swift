@@ -1,9 +1,12 @@
-import AVFoundation
 import Foundation
+
+// Not on iOS, which hands the whole countdown to AlarmKit (see `TimerAlarm`).
+#if !os(iOS)
+import AVFoundation
 import UserNotifications
 
-// The "time is up" signal. Rings in a loop until dismissed; a silent player holds the
-// audio session open during the countdown so it still sounds on a locked device.
+// The "time is up" signal. Rings in a loop until dismissed; a silent player keeps the
+// alarm sound loaded during the countdown.
 @MainActor
 enum TimerAlert {
 
@@ -13,34 +16,19 @@ enum TimerAlert {
 
     // MARK: - Audio
 
-    // Silent playback during the countdown. Without it iOS suspends the app and nothing
-    // sounds at zero; with it the process stays alive under the `audio` background mode.
+    // Silent playback during the countdown, so ringing is a volume change on a player
+    // that is already running.
     static func startKeepAlive() {
-        activateSession()
         play(volume: 0)
     }
 
     static func startRinging() {
-        activateSession()
         play(volume: 1)
     }
 
     static func stopAudio() {
         player?.stop()
         player = nil
-        #if os(iOS)
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-        #endif
-    }
-
-    private static func activateSession() {
-        #if os(iOS)
-        let session = AVAudioSession.sharedInstance()
-        // `.mixWithOthers` keeps the user's training music playing — the alarm rides on top
-        // instead of killing the playlist.
-        try? session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
-        try? session.setActive(true)
-        #endif
     }
 
     // Reuses one looping player; changing the volume is what turns keep-alive into an alarm.
@@ -63,7 +51,7 @@ enum TimerAlert {
 
     // MARK: - Notification fallback
 
-    // Belt and braces: if iOS reclaims the audio session anyway, this still fires.
+    // Belt and braces: still fires if the app is not around to ring at zero.
     // Authorization is requested on first use, not at launch, so the prompt has context.
     static func schedule(at endDate: Date) {
         Task {
@@ -97,3 +85,4 @@ enum TimerAlert {
         center.removeDeliveredNotifications(withIdentifiers: [requestID])
     }
 }
+#endif

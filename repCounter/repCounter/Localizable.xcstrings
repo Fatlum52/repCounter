@@ -211,6 +211,26 @@
         }
       }
     },
+    "Alarms are turned off": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wecker sind deaktiviert"
+          }
+        }
+      }
+    },
+    "Allow Plain Reps to use alarms in Settings so the timer can ring when it ends.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaube Plain Reps in den Einstellungen, Wecker zu verwenden, damit der Timer nach Ablauf klingelt."
+          }
+        }
+      }
+    },
     "Best": {
       "localizations": {
         "de": {
@@ -615,6 +635,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Notizen"
+          }
+        }
+      }
+    },
+    "Open Settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen öffnen"
           }
         }
       }
