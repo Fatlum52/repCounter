@@ -544,9 +544,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Plain Reps";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
-				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take photos and record videos of your exercises.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to record audio for exercise videos.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Plain Reps needs access to your photo library to select images and videos for your exercises.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -613,9 +610,6 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Plain Reps";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
-				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take photos and record videos of your exercises.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "This app needs access to your microphone to record audio for exercise videos.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Plain Reps needs access to your photo library to select images and videos for your exercises.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
